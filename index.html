@@ -1,45 +1,394 @@
-HTML
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>테트리스</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-    }
+    <meta charset
+    <title>Dual M
+    <style>
+        html, bod
+        
+        .containe
 
-    #tetris {
-      width: 300px;
-      height: 600px;
-      border: 1px solid black;
-      margin: 50px auto;
-      display: flex;
-      flex-direction: column;
-    }
+        /* 좌측: 
+        #google-m
+        #google-m
 
-    #board {
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: repeat(10, 30px);
-      grid-template-rows: repeat(20, 30px);
-    }
+        /* 우측: 
+        .map_wrap
+        #map { wi
+        
+        /* 미니맵
+        #map.mini
+            width
+            top: 
+            z-ind
+            borde
+            box-s
+        }
 
-    .block {
-      width: 30px;
-      height: 30px;
-      background-color: red;
-    }
-  </style>
+        #roadview
+        #resizer 
+
+        #rv-close
+        #rv-close
+
+        .search_b
+        .search_b
+        .search_b
+
+        .toolbar 
+        .toolbar 
+        .toolbar 
+        .toolbar 
+        .toolbar 
+        .toolbar 
+
+        .info-ove
+        .measure-
+        .MapWalke
+        .MapWalke
+        .MapWalke
+        
+        .error-ms
+    </style>
 </head>
 <body>
-  <div id="tetris">
-    <div id="board"></div>
-  </div>
-  <script src="script.js"></script>
+
+<div class="conta
+    <div id="goog
+        <div id="
+    </div>
+
+    <div class="m
+        <div id="
+        <div id="
+
+        <div id="
+            <div 
+            
+            <div 
+                <
+                <
+            </div
+
+            <div 
+                <
+                <
+                <
+                <
+                <
+            </div
+        </div>
+    </div>
+</div>
+
+<div id="error-me
+    <h3>지도를 불
+    <p>API 키 설
+</div>
+
+<!-- 1. 카카오맵 
+<script type="tex
+
+<!-- 2. 메인 스크
+<script>
+    var mapContai
+    var rvContain
+    var rvCloseBt
+    var resizer =
+    
+    var googleMap
+    var kakaoWrap
+
+    var map = nul
+    var gMap = nu
+    var syncLock 
+
+    var ps = new 
+    var rv = new 
+    var rvClient 
+    
+    var mapWalker
+    var searchMar
+    var currentMo
+    var drawingOb
+    var drawingPa
+    var allOverla
+    var allShapes
+    var allMarker
+
+    var startLat 
+    var startLng 
+
+    // 카카오맵 
+    if (typeof ka
+        document.
+    } else {
+        var mapOp
+        map = new
+        map.addCo
+        map.addCo
+        
+        kakao.map
+        kakao.map
+    }
+
+    // [중요] ini
+    window.initGo
+        var gOpti
+            cente
+            zoom:
+            disab
+            scale
+        };
+        gMap = ne
+        
+        // 구글맵
+        gMap.addL
+        gMap.addL
+        gMap.addL
+    };
+
+    // 동기화 함
+    function sync
+        if (!gMap
+        syncLock 
+        var cente
+        var kLeve
+        var gZoom
+        gMap.setC
+        if(gMap.g
+        setTimeou
+    }
+
+    function sync
+        if (!map 
+        syncLock 
+        var cente
+        var gZoom
+        var kLeve
+        if (kLeve
+        map.setCe
+        if(map.ge
+        setTimeou
+    }
+
+    function crea
+        return `<
+                 
+                 
+                <
+    }
+
+    function sear
+        var keywo
+        if (!keyw
+        ps.keywor
+    }
+
+    function plac
+        if (statu
+            var t
+            if (s
+            searc
+            map.s
+            map.s
+            if (c
+        } else if
+            alert
+        } else {
+            alert
+        }
+    }
+
+    function togg
+        if (!map)
+        stopDrawi
+
+        if (mode 
+            toggl
+            retur
+        }
+
+        document.
+            if(!b
+        });
+        var targe
+        if(target
+
+        if (curre
+            close
+        }
+
+        currentMo
+
+        if (mode 
+            googl
+            kakao
+
+            rvCon
+            rvClo
+            resiz
+
+            mapCo
+            mapCo
+            
+            mapCo
+            map.a
+
+            setTi
+                m
+                r
+                t
+            }, 30
+
+        } else if
+            map.s
+        } else {
+            map.s
+            if (g
+                c
+            }
+        }
+    }
+
+    function clos
+        rvContain
+        rvCloseBt
+        
+        googleMap
+        kakaoWrap
+        
+        mapContai
+        resizer.s
+
+        mapContai
+        mapContai
+
+        map.remov
+        
+        if(mapWal
+            mapWa
+            mapWa
+        }
+        
+        setTimeou
+            map.r
+            if(gM
+            syncG
+        }, 300);
+    }
+
+    function togg
+        rvClient.
+            if (p
+                r
+                i
+                e
+            }
+        });
+    }
+
+    var isResizin
+    resizer.addEv
+    window.addEve
+        if (!isRe
+        if (!mapC
+        var newWi
+        var newHe
+        if(newWid
+        if(newHei
+        mapContai
+        mapContai
+        map.relay
+        if(mapWal
+    });
+    window.addEve
+
+    function init
+        if(mapWal
+        mapWalker
+    }
+    function move
+    kakao.maps.ev
+        var viewp
+        if(mapWal
+    });
+    kakao.maps.ev
+        var rvPos
+        moveWalke
+        map.setCe
+    });
+    kakao.maps.ev
+        var click
+        if (curre
+        if (curre
+        drawingPa
+        var marke
+        allMarker
+        if (!draw
+            if (c
+                d
+            } els
+                d
+            }
+        } else {
+            drawi
+            var c
+            if (c
+                v
+                c
+            } els
+                i
+                 
+                 
+                }
+            }
+            if (c
+                v
+                a
+            }
+        }
+    });
+    kakao.maps.ev
+        if (!draw
+        var path 
+        path.push
+        drawingOb
+    });
+    kakao.maps.ev
+        if (!draw
+        var posit
+        var conte
+        if (curre
+            var d
+            conte
+        } else {
+            var a
+            var p
+            conte
+        }
+        var overl
+        allOverla
+        allShapes
+        drawingOb
+        drawingPa
+    });
+
+    function clea
+        allOverla
+        allShapes
+        allMarker
+        allOverla
+        stopDrawi
+        if (searc
+        document.
+    }
+    function stop
+</script>
+
+
+<!-- 3. 구글맵 AP
+<!-- YOUR_GOOGLE_
+<script src="http
 </body>
 </html>
