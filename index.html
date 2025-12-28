@@ -3,18 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <title>Dual Map Viewer - Final (Optimized)</title>
-    <link rel="icon" type="image/png" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" href="/images/favicon.ico">
+   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     html,body{margin:0;height:100%;font-family:Arial;}
-    #controls{display:flex;gap:20px;padding:8px;background:#222;color:#fff;flex-wrap:wrap;}
+    #controls{display:flex;gap:20px;padding:8px;background:#222;color:#fff;flex-wrap:wrap;align-items:center;}
     .panel{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
     #searchInput{width:260px;padding:4px 6px;font-size: 16px; font-family: Arial, sans-serif;}
     #historySelect { width: 140px; height: 28px; padding: 4px 6px; font-size: 15px; margin-left: 5px; }
     #container{display:flex;height:calc(100% - 48px);}
     .map{flex:1;position:relative; border-right: 1px solid #444;}
     .map:last-child{border-right:none;}
+
+    /* Padlet 링크 스타일 (우측 정렬) */
+    .padlet-link {
+        margin-left: auto; 
+        color: #4DC4FF;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: bold;
+        padding: 4px 8px;
+        border: 1px solid #4DC4FF;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+    .padlet-link:hover {
+        background: #4DC4FF;
+        color: #fff;
+    }
 
     /* 자동완성 */
     #suggestList{
@@ -35,20 +53,23 @@
         font-size: 13px; 
         min-width: 50px; }
 
-    /* 공통 미니맵 스타일 */
+    /* 미니맵 스타일 */
     .minimap-style {
       position: absolute !important;
-      width: 350px !important; height: 250px !important;
+      width: 25% !important; 
+      height: 25% !important;
+      min-width: 250px;
+      min-height: 200px;
       top: auto !important; bottom: 0; left: 0;
       z-index: 20; border-top: 1px solid #888; border-right: 1px solid #888;
       box-shadow: 2px -2px 5px rgba(0,0,0,0.3);
     }
 
-    /* 닫기 버튼 공통 스타일 (네이버 깜빡임 해결 적용) */
+    /* 닫기 버튼 공통 스타일 */
     .close-btn-style {
       position:absolute; top:10px; right:10px; 
-      z-index: 10001; /* [수정] Z-index 상향 */
-      transform: translateZ(0); /* [수정] GPU 레이어 강제 생성 */
+      z-index: 10001; 
+      transform: translateZ(0); 
       padding:5px 10px; background:#fff; color:#333;
       border:1px solid #ccc; cursor:pointer; border-radius:3px;
       font-weight:bold; font-size: 12px; display:none; 
@@ -64,7 +85,7 @@
       box-shadow:0 2px 4px rgba(0,0,0,0.2); color:#333;
     }
 
-    /* 카카오 GIS 툴바 */
+    /* 카카오 GIS 툴바 스타일 개선 */
     .kakao-toolbar{
       position:absolute;top:5px;right:40px;z-index:30;
       background:white;border-radius:5px;
@@ -72,13 +93,31 @@
       display:flex;overflow:hidden;
     }
     .kakao-toolbar button{
-      background:#fff;border:0;border-right:1px solid #ddd;
-      padding:8px 12px;cursor:pointer;font-weight:bold;font-size:12px;
+      background:#fff; border:0; border-right:1px solid #ddd;
+      padding:6px 10px; /* 패딩 조정 */
+      cursor:pointer;
+      display: flex; /* 이미지 수직 중앙 정렬 */
+      align-items: center;
+      justify-content: center;
+      width: 40px; /* 버튼 크기 통일 */
+      height: 34px;
     }
     .kakao-toolbar button:last-child{border-right:none;}
     .kakao-toolbar button:hover{background:#f5f5f5;}
-    .kakao-toolbar button.active{background:#3396ff;color:white;}
-    .kakao-toolbar button.delete-btn{color:#e14f4f;}
+    
+    /* 활성화 상태 (배경 파란색) */
+    .kakao-toolbar button.active{background:#3396ff;}
+    
+    /* 활성화 시 이미지 색상 반전 (흰색 효과) */
+    .kakao-toolbar button.active img {
+        filter: invert(100%);
+    }
+    .kakao-toolbar button img {
+        display: block;
+        width: 20px; 
+        height: 20px;
+        pointer-events: none; /* 이미지가 클릭 이벤트 방해하지 않도록 설정 */
+    }
 
     /* 로드뷰 상태 표시 */
     .roadview-status {
@@ -128,10 +167,9 @@
   </style>
 
   <!-- SDKs -->
-   
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=KAKAO_KEY_PLACEHOLDER&libraries=services,drawing,clusterer"></script>
-  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=NAVER_KEY_PLACEHOLDER&submodules=panorama"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_KEY_PLACEHOLDER&callback=init"></script>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8d2d116d6a534a98e73133808f5843a6&libraries=services,drawing,clusterer"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du&submodules=panorama"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYXu5yKdW71VuKmI-N2M2xbvMaYTK2HCg&callback=init"></script>
 </head>
 
 <body>
@@ -153,6 +191,9 @@
     <select id="historySelect"><option value="">최근 검색 기록</option></select>
     <div id="suggestList"></div>
   </div>
+
+    <a href="https://padlet.com/googiden/padlet-qr93paqb7efcunwe" target="_blank" class="padlet-link">사용후기 &gt;</a>
+  
 </div>
 
 <div id="container">
@@ -330,17 +371,27 @@ function createMap(side, containerId) {
     const toolbar = document.createElement("div");
     toolbar.className = "kakao-toolbar";
     
+    // [수정] 툴바 버튼 데이터 (이미지 경로 적용)
     const btnData = [
-      { id: 'roadview', text: '로드뷰', action: () => toggleKakaoMode(side, 'roadview', wrapper) },
-      { id: 'district', text: '지적도', action: () => toggleKakaoOverlay(side, 'district') },
-      { id: 'distance', text: '거리', action: () => toggleKakaoMode(side, 'distance', wrapper) },
-      { id: 'area', text: '면적', action: () => toggleKakaoMode(side, 'area', wrapper) },
-      { id: 'clear', text: '초기화', class: 'delete-btn', action: () => clearKakaoMeasurements(side) }
+      { id: 'roadview', text: '로드뷰', img: '/images/map_roadview20.jpg', action: () => toggleKakaoMode(side, 'roadview', wrapper) },
+      { id: 'district', text: '지적도', img: '/images/map_cada20.jpg', action: () => toggleKakaoOverlay(side, 'district') },
+      { id: 'distance', text: '거리', img: '/images/map_scale20.jpg', action: () => toggleKakaoMode(side, 'distance', wrapper) },
+      { id: 'area', text: '면적', img: '/images/map_area20.jpg', action: () => toggleKakaoMode(side, 'area', wrapper) },
+      { id: 'clear', text: '초기화', img: '/images/map_trash20.jpg', class: 'delete-btn', action: () => clearKakaoMeasurements(side) }
     ];
 
     btnData.forEach(bd => {
       const btn = document.createElement("button");
-      btn.innerHTML = bd.text;
+      
+      // 이미지 생성 및 추가
+      const img = document.createElement("img");
+      img.src = bd.img;
+      img.alt = bd.text;
+      btn.appendChild(img);
+      
+      // 툴팁 설정 (마우스 호버 시 텍스트 표시)
+      btn.title = bd.text; 
+
       if(bd.class) btn.className = bd.class;
       btn.setAttribute('data-mode', bd.id); 
       btn.onclick = bd.action;
@@ -369,19 +420,6 @@ function createMap(side, containerId) {
     kakao.maps.event.addListener(map, 'mousemove', (e) => onKakaoMapMouseMove(side, e));
     kakao.maps.event.addListener(map, 'rightclick', (e) => onKakaoMapRightClick(side, e));
 
-    // kakao.maps.event.addListener(rv, 'position_changed', () => {
-    //   const pos = rv.getPosition();
-    //   if(side.gis.walker) {
-    //     side.gis.walker.setPosition(pos);
-    //   } else {
-    //     side.gis.walker = new kakao.maps.CustomOverlay({
-    //         position: pos,
-    //         content: createWalkerContent(0),
-    //         map: side.map
-    //     });
-    //   }
-    //   map.setCenter(pos);
-    // });
     kakao.maps.event.addListener(rv, 'position_changed', () => {
       // 로드뷰가 활성화된 상태가 아니라면 아무것도 하지 않음
       if (!side.roadviewActive) return; 
@@ -401,12 +439,6 @@ function createMap(side, containerId) {
 
     
     kakao.maps.event.addListener(rv, 'viewpoint_changed', () => {
-    //   const vp = rv.getViewpoint();
-    //   if(side.gis.walker) {
-    //     side.gis.walker.setContent(createWalkerContent(vp.pan));
-    //   }
-    // });
-
       if (!side.roadviewActive) return; // 활성화 상태 체크
 
       const vp = rv.getViewpoint();
@@ -568,8 +600,13 @@ function toggleKakaoMode(side, mode, wrapper){
     return;
   }
 
+  // [수정] 모드 변경 시 버튼 상태 초기화 (단, 'district'(지적도) 버튼은 제외)
   const buttons = side.dom.toolbar.querySelectorAll('button');
-  buttons.forEach(b => b.classList.remove('active'));
+  buttons.forEach(b => {
+      if(b.getAttribute('data-mode') !== 'district') {
+          b.classList.remove('active');
+      }
+  });
   
   const targetBtn = side.dom.toolbar.querySelector(`button[data-mode="${mode}"]`);
   if(targetBtn) targetBtn.classList.add('active');
@@ -591,7 +628,7 @@ function toggleKakaoMode(side, mode, wrapper){
     side.map.setCursor('crosshair');
     side.gis.waiting = true; 
     side.roadviewActive = true; 
-    if(targetBtn) targetBtn.innerHTML = "로드뷰 취소";
+    // 이미지 버튼이므로 텍스트 변경 로직 생략
   } 
   else if (mode === 'distance' || mode === 'area') {
     side.map.setCursor('crosshair');
@@ -614,9 +651,6 @@ function onKakaoMapClick(side, mouseEvent, rvDiv, mapDiv, closeBtn){
       closeBtn.style.display = 'block';
       mapDiv.classList.add('minimap-style');
       
-      const btn = side.dom.toolbar.querySelector('button[data-mode="roadview"]');
-      if(btn) btn.innerHTML = "로드뷰";
-
       setTimeout(() => {
         side.map.relayout();
         side.panorama.relayout();
@@ -666,13 +700,16 @@ function moveKakaoRoadview(side, pos) {
   kakaoRvClient.getNearestPanoId(pos, 50, (panoId) => {
     if(panoId) {
       side.panorama.setPanoId(panoId, pos);
-      if(side.gis.walker) side.gis.walker.setMap(null);
-      side.gis.walker = new kakao.maps.CustomOverlay({
-        position: pos,
-        content: createWalkerContent(0),
-        map: side.map
-      });
-      side.map.setCenter(pos);
+      if(side.gis.walker) {
+        side.gis.walker.setPosition(pos);
+      } else if (side.roadviewActive) { 
+        side.gis.walker = new kakao.maps.CustomOverlay({
+            position: pos,
+            content: createWalkerContent(0),
+            map: side.map
+        });
+      }
+      map.setCenter(pos);
     }
   });
 }
@@ -726,9 +763,11 @@ function closeKakaoRoadview(side, rvDiv, mapDiv, closeBtn){
   side.map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
 
   const buttons = side.dom.toolbar.querySelectorAll('button');
-  buttons.forEach(b => b.classList.remove('active'));
-  const btn = side.dom.toolbar.querySelector('button[data-mode="roadview"]');
-  if(btn) btn.innerHTML = "로드뷰";
+  buttons.forEach(b => {
+      if(b.getAttribute('data-mode') !== 'district') {
+          b.classList.remove('active');
+      }
+  });
 
   if(side.gis.walker) { side.gis.walker.setMap(null); side.gis.walker = null; }
   if(side.gis.statusEl) { side.gis.statusEl.remove(); side.gis.statusEl = null; }
