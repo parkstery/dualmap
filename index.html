@@ -373,11 +373,11 @@ function createMap(side, containerId) {
     
     // [수정] 툴바 버튼 데이터 (이미지 경로 적용)
     const btnData = [
-      { id: 'roadview', text: '로드뷰', img: '/images/map_roadview20.jpg', action: () => toggleKakaoMode(side, 'roadview', wrapper) },
-      { id: 'district', text: '지적도', img: '/images/map_cada20.jpg', action: () => toggleKakaoOverlay(side, 'district') },
-      { id: 'distance', text: '거리', img: '/images/map_scale20.jpg', action: () => toggleKakaoMode(side, 'distance', wrapper) },
-      { id: 'area', text: '면적', img: '/images/map_area20.jpg', action: () => toggleKakaoMode(side, 'area', wrapper) },
-      { id: 'clear', text: '초기화', img: '/images/map_trash20.jpg', class: 'delete-btn', action: () => clearKakaoMeasurements(side) }
+      { id: 'roadview', text: '로드뷰', img: './images/map_roadview20.jpg', action: () => toggleKakaoMode(side, 'roadview', wrapper) },
+      { id: 'district', text: '지적도', img: './images/map_cada20.jpg', action: () => toggleKakaoOverlay(side, 'district') },
+      { id: 'distance', text: '거리', img: './images/map_scale20.jpg', action: () => toggleKakaoMode(side, 'distance', wrapper) },
+      { id: 'area', text: '면적', img: './images/map_area20.jpg', action: () => toggleKakaoMode(side, 'area', wrapper) },
+      { id: 'clear', text: '초기화', img: './images/map_trash20.jpg', class: 'delete-btn', action: () => clearKakaoMeasurements(side) }
     ];
 
     btnData.forEach(bd => {
@@ -1152,4 +1152,5 @@ function searchKeyword(q){
 }
 </script>
 </body>
+
 </html>
