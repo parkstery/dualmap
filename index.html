@@ -207,9 +207,11 @@
         /* [수정] 히스토리 팝업 위치 및 크기 조정 */
         #historySelect { 
             width: 150px; 
+            position: fixed;
             left: auto; /* 왼쪽 기준 해제 */
-            right: 0;   /* 패널의 오른쪽 끝에 정렬 */
-            top: 100%;
+            right: 10;   /* 패널의 오른쪽 끝에 정렬 */
+            top: 55px;
+            z-index: 9999;
         }
     }
   </style>
@@ -1219,3 +1221,4 @@ function searchKeyword(q){
 </script>
 </body>
 </html>
+
