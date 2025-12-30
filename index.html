@@ -2,18 +2,16 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Dual Map Viewer - Final (Mobile Fix)</title>  
+  <title>Dual Map Viewer - Final (Mobile UI Fixed)</title>  
   <link rel="icon" type="image/x-icon" href="https://parkstery.github.io/map/images/favicon.ico"> 
-  <!-- [중요] 뷰포트 설정 강화 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
   <style>
     /* === [기본 데스크탑 스타일] === */
-    /* [수정] dvh 단위 사용하여 모바일 주소창 대응 */
     html, body {
         margin: 0; 
         height: 100%; 
-        height: 100dvh; /* 모바일 동적 높이 대응 */
+        height: 100dvh; 
         font-family: Arial; 
         overflow: hidden;
     }
@@ -22,7 +20,7 @@
         display:flex; gap:20px; padding:8px; background:#222; color:#fff; 
         flex-wrap:wrap; align-items:center;
         flex-shrink: 0; 
-        z-index: 100; /* 컨트롤이 맵 위에 확실히 오도록 */
+        z-index: 100; 
         position: relative;
     }
     
@@ -56,14 +54,14 @@
     #container{
         display:flex; 
         width: 100%;
-        height: calc(100% - 50px); /* fallback */
-        height: calc(100dvh - 50px); /* 모바일 높이 계산 정확도 향상 */
+        height: calc(100% - 50px); 
+        height: calc(100dvh - 50px); 
         min-height: 0;
     }
     
     .map{
         flex:1; position:relative; border-right: 1px solid #444; 
-        width: 50%; height: 100%; /* 높이 명시 */
+        width: 50%; height: 100%; 
     }
     .map:last-child{border-right:none;}
 
@@ -177,7 +175,6 @@
     @media (max-width: 768px) {
         #container { 
             flex-direction: column; 
-            /* 화면이 작을 때 스크롤이 생기지 않도록 처리 */
             height: calc(100dvh - 100px); 
             min-height: 0;
         }
@@ -186,7 +183,7 @@
             border-right: none; 
             border-bottom: 1px solid #444; 
             width: 100%;
-            height: 50%; /* 부모의 절반 높이 강제 */
+            height: 50%; 
             flex: 1 1 auto;
         }
         
@@ -204,14 +201,24 @@
             bottom: 5px; left: 5px;
         }
         
-        /* [수정] 히스토리 팝업 위치 및 크기 조정 */
+        /* [수정] 히스토리 팝업 위치: 검색창 너비 + 패딩만큼 왼쪽에서 띄움 */
         #historySelect { 
+            display: none;
+            position: absolute;
+            left: 145px; /* Input(130) + Padding/Border(14~15) */
+            right: auto;
+            top: 42px;   /* 검색창 바로 아래 */
+            
             width: 150px; 
-            position: fixed;
-            left: auto; /* 왼쪽 기준 해제 */
-            right: 10;   /* 패널의 오른쪽 끝에 정렬 */
-            top: 55px;
-            z-index: 9999;
+            height: auto;
+            max-height: 200px;
+            padding: 4px; 
+            font-size: 14px; 
+            z-index: 2001;
+            border: 1px solid #888;
+            background: #fff;
+            color: #333;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
     }
   </style>
@@ -244,12 +251,10 @@
   <div id="rightMap" class="map"></div>
 </div>
 
-<!-- 스크립트 로드 순서: 렌더링 후 로드 -->
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=KAKAO_KEY_PLACEHOLDER&libraries=services,drawing,clusterer"></script>
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=NAVER_KEY_PLACEHOLDER"></script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_KEY_PLACEHOLDER&callback=init"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8d2d116d6a534a98e73133808f5843a6&libraries=services,drawing,clusterer"></script>
+<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du&submodules=panorama"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYXu5yKdW71VuKmI-N2M2xbvMaYTK2HCg&callback=init"></script>
 
-  
 <script>
 /* ===== 상태 관리 ===== */
 let syncing = false;
@@ -302,24 +307,20 @@ function init(){
   createMaps();
   renderHistory();
 
-  // [중요] 모바일 빈 화면 방지: 여러 번에 걸쳐 리사이즈 트리거
+  // [중요] 모바일 초기 로딩 해결
   setTimeout(forceMapRelayout, 300);
   setTimeout(forceMapRelayout, 1000);
-  setTimeout(forceMapRelayout, 3000); // 네트워크 느린 환경 대비
+  setTimeout(forceMapRelayout, 3000); 
 }
 
-/* [추가] 리사이즈 이벤트 감지 */
 window.addEventListener('resize', () => {
-    // 화면 크기 변경 시 강제 리레이아웃
     setTimeout(forceMapRelayout, 100);
 });
 
-// [추가] 강제 리레이아웃 함수
 function forceMapRelayout() {
     [left, right].forEach(side => {
         if(!side.map) return;
         
-        // 각 맵 API별 리사이즈/재조정 함수 호출
         if(side.type === 'kakao') {
             side.map.relayout();
             side.map.setCenter(new kakao.maps.LatLng(state.lat, state.lng));
@@ -327,7 +328,6 @@ function forceMapRelayout() {
             google.maps.event.trigger(side.map, 'resize');
             side.map.setCenter(state);
         } else if(side.type === 'naver') {
-            // 네이버는 컨테이너 크기를 명시적으로 다시 읽게 함
             const mapDiv = side.map.getElement();
             if (mapDiv) {
                 side.map.setSize(new naver.maps.Size(mapDiv.offsetWidth, mapDiv.offsetHeight));
@@ -1221,4 +1221,3 @@ function searchKeyword(q){
 </script>
 </body>
 </html>
-
