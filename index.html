@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Dual Map Viewer - Final (Mobile UI Fixed)</title>  
+  <title>Dual Map Viewer - Final (Mobile Tweaked)</title>  
   <link rel="icon" type="image/x-icon" href="https://parkstery.github.io/map/images/favicon.ico"> 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
@@ -81,7 +81,8 @@
 
     select#leftSelect, select#rightSelect { width: 70px; height: 32px; padding: 1px 1px; font-size: 15px; }
     
-    #searchBtn, #clearSearchBtn { 
+    /* Go 버튼 삭제됨, Clear 버튼 스타일 */
+    #clearSearchBtn { 
         padding: 1px 12px; height: 32px; width: 32px; line-height: 20px;
         font-size: 13px; text-align: center; min-width: 1px; cursor: pointer;
         background: #fff; border: 1px solid #ccc; border-radius: 3px; margin-left: 2px;
@@ -190,10 +191,14 @@
         #controls { padding: 5px; gap: 10px; justify-content: space-between; }
         .panel { gap: 4px; }
 
-        #leftType, #rightType, #searchBtn, #clearSearchBtn { height: 40px; width: 40px; }
-        select#leftSelect, select#rightSelect { height: 40px; }
+        /* [수정] 모바일 컨트롤 높이: 40px -> 28px (70%) */
+        #leftType, #rightType, #clearSearchBtn { height: 28px; width: 28px; }
         
-        #searchInput { width: 130px; height: 24px; font-size: 14px; }
+        /* [수정] Select 너비 55px, 높이 28px */
+        select#leftSelect, select#rightSelect { height: 28px; width: 55px; font-size: 12px; }
+        
+        /* [수정] Search Input 너비 100px, 높이 28px(패딩포함) */
+        #searchInput { width: 100px; padding: 4px 6px; height: 18px; font-size: 13px; }
 
         .minimap-style {
             width: 40% !important; height: 35% !important;
@@ -201,13 +206,13 @@
             bottom: 5px; left: 5px;
         }
         
-        /* [수정] 히스토리 팝업 위치: 검색창 너비 + 패딩만큼 왼쪽에서 띄움 */
+        /* [수정] 히스토리 팝업 위치 고정 */
         #historySelect { 
             display: none;
             position: absolute;
-            left: 185px; /* Input(130) + Padding/Border(14~15) */
+            left: 185px; /* 요청하신 고정값 */
             right: auto;
-            top: 42px;   /* 검색창 바로 아래 */
+            top: 100%;   /* 검색창 바로 아래 */
             
             width: 150px; 
             height: auto;
@@ -236,7 +241,7 @@
   </div>
   <div class="panel" style="position:relative;">
     <input id="searchInput" placeholder="주소 또는 지명 입력" autocomplete="off"/>
-    <button id="searchBtn" title="검색">Go</button>
+    <!-- [수정] searchBtn(Go) 제거됨 -->
     <button id="clearSearchBtn" title="지우기"><img src="images/map_trash20.jpg" alt="Clear"></button>
     
     <select id="historySelect" size="5"><option value="">최근 검색 기록</option></select>
@@ -307,7 +312,6 @@ function init(){
   createMaps();
   renderHistory();
 
-  // [중요] 모바일 초기 로딩 해결
   setTimeout(forceMapRelayout, 300);
   setTimeout(forceMapRelayout, 1000);
   setTimeout(forceMapRelayout, 3000); 
@@ -1034,7 +1038,7 @@ function bindUI(){
   rightType.onclick = () => toggleType(right, rightType);
 
   const input = document.getElementById("searchInput");
-  const btn = document.getElementById("searchBtn");
+  // const btn = document.getElementById("searchBtn"); // Removed
   const clearBtn = document.getElementById("clearSearchBtn");
   const historySelect = document.getElementById('historySelect');
   const suggestList = document.getElementById("suggestList");
@@ -1065,7 +1069,7 @@ function bindUI(){
     suggestList.style.display = "none";
   };
 
-  btn.onclick = doSearch;
+  // btn.onclick = doSearch; // Removed
 
   input.addEventListener("keydown", e => {
     const items = suggestList.querySelectorAll("div");
@@ -1221,4 +1225,3 @@ function searchKeyword(q){
 </script>
 </body>
 </html>
-
