@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Dual Map Viewer - Final (Mobile Optimized)</title>  
+  <title>Dual Map Viewer - Final (UI Fixed)</title>  
   <link rel="icon" type="image/x-icon" href="https://parkstery.github.io/map/images/favicon.ico"> 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -15,21 +15,28 @@
         flex-wrap:wrap; align-items:center;
     }
     
-    /* [수정] position: relative 추가 (팝업 위치 기준점) */
     .panel{
         display:flex; gap:6px; align-items:center; flex-wrap:wrap; position: relative;
     }
     
     #searchInput{width:200px; padding:7px 6px; font-size: 16px; font-family: Arial, sans-serif;}
     
-    /* [수정] 검색 기록 팝업 위치 개선 (부모 패널 기준) */
+    /* [수정] 검색 추천 리스트 (기준 위치) */
+    #suggestList{
+      position:absolute; top:42px; left:0; /* 검색 패널 기준 왼쪽 정렬 */
+      width:220px; max-height:600px; overflow-y:auto; background:#fff;
+      border:1px solid #888; z-index:2000; display:none;
+    }
+    #suggestList div{padding:8px 10px; border-bottom:1px solid #eee; cursor:pointer; color:black; font-size: 15px;}
+    #suggestList div:hover, #suggestList div.active{background:#cce5ff;}
+
+    /* [수정] 검색 기록 팝업 (위치 및 크기 변경) */
     #historySelect { 
         display: none; 
         position: absolute;
-        top: 100%; /* 부모 패널의 바로 아래 */
-        left: 0;   /* 부모 패널의 왼쪽 시작점 */
-        margin-top: 4px;
-        width: 200px; /* 검색창 너비와 비슷하게 맞춤 */
+        top: 42px; /* 추천 리스트와 높이 맞춤 */
+        left: 225px; /* 추천 리스트(220px) 오른쪽으로 배치 */
+        width: 150px; /* 요청하신 너비 150px */
         height: auto;
         max-height: 200px;
         padding: 4px; 
@@ -57,14 +64,6 @@
         transition: all 0.3s;
     }
     .padlet-link:hover { background: #4DC4FF; color: #fff; }
-
-    #suggestList{
-      position:absolute; top:42px; left:0; /* 검색 패널 기준 */
-      width:220px; max-height:600px; overflow-y:auto; background:#fff;
-      border:1px solid #888; z-index:2000; display:none;
-    }
-    #suggestList div{padding:8px 10px; border-bottom:1px solid #eee; cursor:pointer; color:black; font-size: 15px;}
-    #suggestList div:hover, #suggestList div.active{background:#cce5ff;}
 
     /* 컨트롤 버튼 공통 */
     #leftType, #rightType { 
@@ -169,47 +168,39 @@
 
     /* === [모바일 최적화 (Mobile Responsive)] === */
     @media (max-width: 768px) {
-        /* 1. 레이아웃: 상하 배치로 변경 */
-        /* #container { 
-          flex-direction: column;
-          height: auto; 
-          flex: 1; 
-        } */
         #container { 
-          flex-direction: column;
-          height: calc(100% - 100px); 
-          flex: none; 
-        }        
-        .map { 
-          border-right: none; 
-          border-bottom: 1px solid #444; 
-          height: 50% !important; 
-          flex: 1;
-          width: 100%;
+            flex-direction: column; 
+            height: calc(100% - 100px); 
+            flex: none; 
         }
         
-        /* 2. 컨트롤 패널: 패딩 줄이고 꽉 차게 */
+        .map { 
+            border-right: none; 
+            border-bottom: 1px solid #444; 
+            flex: 1; 
+            width: 100%;
+        }
+        
         #controls { padding: 5px; gap: 10px; justify-content: space-between; }
         .panel { gap: 4px; }
 
-        /* 3. 터치 타겟 확대 (Finger-Friendly) */
         #leftType, #rightType, #searchBtn, #clearSearchBtn { height: 40px; width: 40px; }
         select#leftSelect, select#rightSelect { height: 40px; }
         
-        /* 4. 검색창: 너비 유동적 조절 */
         #searchInput { width: 130px; height: 24px; font-size: 14px; }
 
-        /* 5. 미니맵 최적화: 모바일에서 너무 크지 않게 */
         .minimap-style {
-            width: 35% !important; height: 35% !important;
+            width: 40% !important; height: 35% !important;
             min-width: 140px; min-height: 110px;
             bottom: 5px; left: 5px;
         }
         
-        /* 6. 팝업 너비 맞춤 */
-        #historySelect { width: 200px; }
-        
-        /* 7. Padlet 링크는 공간 부족 시 아이콘만 보이거나 숨김 처리 고려 (현재는 유지) */
+        /* [수정] 모바일에서는 히스토리 팝업 위치 및 너비 재조정 */
+        #historySelect { 
+            width: 200px; 
+            left: 0; /* 모바일에서는 다시 왼쪽 정렬 */
+            top: 100%;
+        }
     }
   </style>
 
@@ -821,8 +812,10 @@ function clearKakaoMeasurements(side){
   side.gis.overlays.forEach(o => o.setMap(null));
   side.gis.shapes.forEach(s => s.setMap(null));
   side.gis.markers.forEach(m => m.setMap(null));
+  
   if(side.searchMarker) { side.searchMarker.setMap(null); side.searchMarker = null; }
   if(kakaoSearchMarker) { kakaoSearchMarker.setMap(null); kakaoSearchMarker = null; }
+  
   side.gis.overlays = []; side.gis.shapes = []; side.gis.markers = [];
   stopKakaoDrawing(side);
   toggleKakaoMode(side, 'default', side.dom.wrapper);
