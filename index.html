@@ -2,9 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Dual Map Viewer - Final (Optimized)</title>  
+  <title>Dual Map Viewer - Final (Mobile Responsive)</title>  
   <link rel="icon" type="image/x-icon" href="https://parkstery.github.io/map/images/favicon.ico"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- 뷰포트 설정: 모바일 확대/축소 방지 및 터치 최적화 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <style>
     html,body{margin:0;height:100%;font-family:Arial;overflow:hidden;}
@@ -12,33 +13,48 @@
     /* [수정] 패널 안 콘트롤 사이 간격 최소화 (gap: 4px) */
     #controls{
         display:flex; gap:4px; padding:6px; background:#222; color:#fff; 
-        align-items:center; flex-wrap:nowrap; border-bottom:1px solid #444;
+        align-items:center; flex-wrap:wrap; border-bottom:1px solid #444;
+        /* 모바일에서 컨트롤 패널이 너무 커지지 않도록 설정 */
+        min-height: 46px; box-sizing: border-box;
     }
     
     /* 검색창 그룹 래퍼 */
     .search-group { position: relative; display: flex; gap: 2px; align-items: center; }
     
-    /* [요구사항] searchinput width 150px */
+    /* [요구사항] searchinput width 150px (기본) */
     #searchInput{
         width:150px; padding:6px; font-size: 14px; font-family: Arial, sans-serif;
         border: 1px solid #ccc; border-radius: 3px;
     }
     
     /* [요구사항] 히스토리 팝업 위치 조정 */
-    #historySelect { 
-        display: none; 
-        position: absolute;
-        top: 34px; left: 0;
-        width: 180px; height: auto;
-        max-height: 200px; padding: 4px; 
-        font-size: 14px; z-index: 2001;
-        border: 1px solid #888; background: #fff; color: #333;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-    }
 
-    #container{display:flex; height:calc(100% - 46px);}
-    .map{flex:1; position:relative; border-right: 1px solid #444;}
-    .map:last-child{border-right:none;}
+    #suggestList {
+      position: absolute; top: 38px; 
+      left: 6px; /* 패널 좌측(padding 고려)에 맞춤 */
+      width: 180px; max-height: 400px; 
+      overflow-y: auto; background: #fff; border: 1px solid #888; z-index: 2000; display: none;
+    }
+    #historySelect { 
+        display: none; position: absolute; top: 38px; 
+        left: 186px; /* suggestList 좌측(6) + 너비(180)에 맞춤 */
+        width: 150px; max-height: 200px; padding: 4px; 
+        font-size: 14px; z-index: 2001; border: 1px solid #888; 
+        background: #fff; color: #333; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
+    #container{
+        display:flex; 
+        /* 기본: 가로 배치 */
+        flex-direction: row; 
+        width: 100%;
+        height:calc(100% - 46px);
+    }
+    
+    .map{
+        flex:1; position:relative; 
+        border-right: 1px solid #444; border-bottom: none;
+    }
+    .map:last-child{border-right:none; border-bottom:none;}
 
     /* Padlet 링크 (우측 정렬) */
     .padlet-link {
@@ -52,33 +68,29 @@
     .padlet-link:hover { background: #4DC4FF; color: #fff; }
 
     /* 자동완성 */
-    #suggestList{
-      position:absolute; top:34px; left:0;
-      width:250px; max-height:500px; overflow-y:auto; background:#fff;
-      border:1px solid #888; z-index:2000; display:none;
-    }
+
     #suggestList div{padding:8px 10px; border-bottom:1px solid #eee; cursor:pointer; color:black; font-size: 14px;}
     #suggestList div:hover, #suggestList div.active{background:#cce5ff;}
 
     /* [요구사항] leftType, rightType width 28px */
     #leftType, #rightType { 
       padding: 0; font-size: 14px;
-      height: 28px; width: 28px;
+      height: 28px; width: 24px;
       cursor: pointer; background: #fff;
       border: 1px solid #ccc; border-radius: 3px;
       display: flex; align-items: center; justify-content: center;
     }
     #leftType img, #rightType img { width: 20px; height: 20px; object-fit: contain; }
 
-    select#leftSelect, select#rightSelect { width: 70px; height: 28px; font-size: 13px; border-radius: 3px; }
+    select#leftSelect, select#rightSelect { width: 60px; height: 28px; font-size: 13px; border-radius: 3px; }
     
     #clearSearchBtn { 
-        padding: 0; height: 28px; width: 28px;
+        padding: 0; height: 29px; width: 24px;
         cursor: pointer; background: #fff;
         border: 1px solid #ccc; border-radius: 3px;
         display: flex; align-items: center; justify-content: center;
     }
-    #clearSearchBtn img { width: 18px; height: 18px; object-fit: contain; }
+    #clearSearchBtn img { width: 18px; height: 28px; object-fit: contain; }
 
     /* 미니맵 스타일 */
     .minimap-style {
@@ -135,7 +147,7 @@
       border-radius:3px; font-size:11px; color:#333;
     }
 
-    .MapWalker{ position:absolute; width:24px; height:24px; margin:-12px 0 0 -12px; }
+    .MapWalker{ position:absolute; width:24px; height:24px; margin:-12px 0 0 -12px; pointer-events:none; }
     .MapWalker .angleBack{
       position:absolute; top:50%; left:50%; width:0; height:0;
       border-left:20px solid transparent; border-right:20px solid transparent;
@@ -154,6 +166,53 @@
       border-bottom: 24px solid #4DC4FF;
       transform-origin: center center;
     }
+
+    /* ==========================================================================
+       [모바일 반응형 CSS] 
+       - 화면 너비 768px 이하일 때 적용
+       - 맵 배치 상하(Column)로 변경
+       - UI 요소 크기 및 배치 최적화 
+       ========================================================================== */
+    @media (max-width: 768px) {
+        /* 1. 컨테이너를 세로 배치로 변경 */
+        #container {
+            flex-direction: column;
+        }
+        
+        /* 2. 각 맵의 높이를 50%로 설정하고 너비를 100%로 설정 */
+        .map {
+            width: 100%;
+            height: 50%;
+            border-right: none;
+            border-bottom: 1px solid #444; /* 세로 배치 시 구분선은 아래쪽에 */
+        }
+        
+        /* 3. 컨트롤 패널 최적화 */
+        #controls {
+            flex-wrap: nowrap; /* 한 줄 유지 시도 */
+            overflow-x: auto; /* 내용이 넘치면 가로 스크롤 허용 */
+            padding: 4px;
+            gap: 6px;
+        }
+        
+        /* 검색창 너비 축소 */
+        #searchInput { width: 110px; font-size: 13px; }
+        
+        /* 선택박스 글자 크기 조정 */
+        select#leftSelect, select#rightSelect { width: 60px; font-size: 12px; }
+        
+        /* 링크 버튼 글자 크기 조정 */
+        .padlet-link { font-size: 12px; }
+
+        /* 모바일에서 미니맵 크기 조정 (화면을 너무 가리지 않게) */
+        .minimap-style {
+            width: 35% !important;
+            height: 35% !important;
+            min-width: 150px;
+            min-height: 120px;
+            bottom: 10px; left: 10px;
+        }
+    }
   </style>
 
   <!-- SDKs -->
@@ -161,6 +220,7 @@
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=NAVER_KEY_PLACEHOLDER"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_KEY_PLACEHOLDER&callback=init"></script>
 </head>
+
 
 <body>
 <div id="controls">
@@ -234,6 +294,33 @@ function init(){
   bindUI();
   createMaps();
   renderHistory();
+
+  // [중요] 모바일 초기 로딩 시 레이아웃 깨짐 방지용 강제 리레이아웃 실행
+  setTimeout(forceMapRelayout, 500); 
+}
+
+// [추가] 모바일 회전/리사이즈 대응 함수
+window.addEventListener('resize', () => {
+    // 0.1초 뒤에 맵 사이즈를 다시 계산하도록 강제함
+    setTimeout(forceMapRelayout, 100);
+});
+
+// [추가] 3사 맵 API 리레이아웃(Resize) 강제 실행 함수
+function forceMapRelayout() {
+    [left, right].forEach(side => {
+        if(!side.map) return;
+        if(side.type === 'kakao') {
+            side.map.relayout();
+            side.map.setCenter(new kakao.maps.LatLng(state.lat, state.lng));
+        } else if(side.type === 'google') {
+            google.maps.event.trigger(side.map, "resize");
+            side.map.setCenter(state);
+        } else if(side.type === 'naver') {
+            // 네이버는 window resize 이벤트를 자동으로 감지하지만 명시적으로 처리
+            side.map.setSize(new naver.maps.Size(side.map.getElement().offsetWidth, side.map.getElement().offsetHeight));
+            side.map.setCenter(new naver.maps.LatLng(state.lat, state.lng));
+        }
+    });
 }
 
 function createMaps(){
@@ -242,6 +329,7 @@ function createMaps(){
   bindEvents(left, right);
   bindEvents(right, left);
   bindRoadviewSync();
+  setTimeout(forceMapRelayout, 200); // 맵 생성 후 즉시 리레이아웃
 }
 
 function createMap(side, containerId) {
@@ -317,7 +405,7 @@ function createMap(side, containerId) {
       { id: 'district', text: '지적도', img: './images/map_cada20.jpg', action: () => toggleKakaoOverlay(side, 'district') },
       { id: 'distance', text: '거리', img: './images/map_scale20.jpg', action: () => toggleKakaoMode(side, 'distance', wrapper) },
       { id: 'area', text: '면적', img: './images/map_area20.jpg', action: () => toggleKakaoMode(side, 'area', wrapper) },
-      { id: 'clear', text: '초기화', img: './images/map_trash20.jpg', action: () => clearKakaoMeasurements(side) }
+      { id: 'clear', text: '초기화', img: './images/map_trash20.jpg', class: 'delete-btn', action: () => clearKakaoMeasurements(side) }
     ];
     btnData.forEach(bd => {
       const btn = document.createElement("button");
@@ -353,66 +441,36 @@ function createMap(side, containerId) {
   }
   // NAVER
   else if(side.type === "naver") {
-    const mapInner = document.createElement("div");
-    mapInner.style.width = "100%"; mapInner.style.height = "100%";
-    el.appendChild(mapInner);
-    const panoDiv = document.createElement("div");
-    panoDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:15;visibility:hidden;";
-    el.appendChild(panoDiv);
-    const closeBtn = document.createElement("div");
-    closeBtn.className = "close-btn-style";
-    closeBtn.innerHTML = "거리뷰 닫기 X";
-    el.appendChild(closeBtn);
-    const streetBtn = document.createElement("div");
-    streetBtn.className = "street-btn-style"; streetBtn.innerHTML = "거리뷰";
-    mapInner.appendChild(streetBtn);
+    const mapInner = document.createElement("div"); mapInner.style.width = "100%"; mapInner.style.height = "100%"; el.appendChild(mapInner);
+    const panoDiv = document.createElement("div"); panoDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:15;visibility:hidden;"; el.appendChild(panoDiv);
+    const closeBtn = document.createElement("div"); closeBtn.className = "close-btn-style"; closeBtn.innerHTML = "거리뷰 닫기 X"; el.appendChild(closeBtn);
+    const streetBtn = document.createElement("div"); streetBtn.className = "street-btn-style"; streetBtn.innerHTML = "거리뷰"; mapInner.appendChild(streetBtn);
 
-    const map = new naver.maps.Map(mapInner, {
-        center: new naver.maps.LatLng(state.lat, state.lng),
-        zoom: state.zoom, maxZoom: 21,
-        mapTypeId: side.satellite ? naver.maps.MapTypeId.SATELLITE : naver.maps.MapTypeId.NORMAL
-    });
-    const pano = new naver.maps.Panorama(panoDiv, {
-        position: new naver.maps.LatLng(state.lat, state.lng), visible: false
-    });
-    side.panorama = pano;
-    const streetLayer = new naver.maps.StreetLayer(); side.naverState.streetLayer = streetLayer;
-    const marker = new naver.maps.Marker({
-        position: map.getCenter(), map: null, icon: { content: '<div class="naver-marker-arrow"></div>', anchor: new naver.maps.Point(8, 10) }
-    });
+    const map = new naver.maps.Map(mapInner, { center: new naver.maps.LatLng(state.lat, state.lng), zoom: state.zoom, maxZoom: 21 });
+    const pano = new naver.maps.Panorama(panoDiv, { position: new naver.maps.LatLng(state.lat, state.lng), pov: { pan: 0, tilt: 0, fov: 100 }, visible: false });
+    side.panorama = pano; const streetLayer = new naver.maps.StreetLayer(); side.naverState.streetLayer = streetLayer;
+    const marker = new naver.maps.Marker({ position: map.getCenter(), map: null, icon: { content: '<div class="naver-marker-arrow"></div>', anchor: new naver.maps.Point(8, 10) } });
     side.naverState.marker = marker; 
 
     streetBtn.onclick = () => {
-      if (side.naverState.active) resetNaverRoadview();
-      else {
-        side.naverState.active = true; streetLayer.setMap(map); 
-        streetBtn.innerHTML = "거리뷰 취소"; streetBtn.style.background = "#4DC4FF"; map.setCursor('crosshair');
-      }
+      if (side.naverState.active) { resetNaverRoadview(); } 
+      else { side.naverState.active = true; streetLayer.setMap(map); streetBtn.innerHTML = "거리뷰 취소"; streetBtn.style.background = "#4DC4FF"; streetBtn.style.color = "white"; map.setCursor('crosshair'); }
     };
     function resetNaverRoadview() {
-      side.naverState.active = false; side.roadviewActive = false; 
-      streetLayer.setMap(null); streetBtn.innerHTML = "거리뷰"; streetBtn.style.background = "#fff";
-      pano.setVisible(false); panoDiv.style.visibility = 'hidden';
-      mapInner.classList.remove('minimap-style'); closeBtn.style.display = 'none'; streetBtn.style.display = 'block';
-      marker.setMap(null); map.setCursor('default');
-      setTimeout(() => naver.maps.Event.trigger(map, 'resize'), 100);
+      side.naverState.active = false; side.roadviewActive = false; streetLayer.setMap(null); streetBtn.innerHTML = "거리뷰"; streetBtn.style.background = "#fff"; streetBtn.style.color = "#333"; streetBtn.style.display = 'block';
+      pano.setVisible(false); panoDiv.style.visibility = 'hidden'; mapInner.classList.remove('minimap-style'); closeBtn.style.display = 'none'; marker.setMap(null); map.setCursor('default'); setTimeout(() => naver.maps.Event.trigger(map, 'resize'), 100);
     }
     naver.maps.Event.addListener(map, 'click', (e) => {
       if (side.naverState.active && streetLayer.getMap()) {
         const newPos = e.coord; marker.setPosition(newPos); map.setCenter(newPos); map.setZoom(18); pano.setPosition(newPos);
         if (!mapInner.classList.contains('minimap-style')) {
-            side.roadviewActive = true; pano.setVisible(true); panoDiv.style.visibility = 'visible';
-            mapInner.classList.add('minimap-style'); closeBtn.style.display = 'block'; streetBtn.style.display = 'none';
-            marker.setMap(map); naver.maps.Event.trigger(map, 'resize');
+            side.roadviewActive = true; pano.setVisible(true); panoDiv.style.visibility = 'visible'; mapInner.classList.add('minimap-style'); closeBtn.style.display = 'block'; streetBtn.style.display = 'none'; marker.setMap(map); map.setCursor('default'); naver.maps.Event.trigger(map, 'resize');
             setTimeout(() => { map.setCenter(newPos); map.setZoom(18); streetLayer.setMap(map); }, 150);
         }
       }
     });
     naver.maps.Event.addListener(pano, 'pano_changed', () => { marker.setPosition(pano.getPosition()); map.setCenter(pano.getPosition()); });
-    naver.maps.Event.addListener(pano, 'pov_changed', () => {
-      const arrow = mapInner.querySelector('.naver-marker-arrow');
-      if(arrow) arrow.style.transform = `rotate(${pano.getPov().pan}deg)`;
-    });
+    naver.maps.Event.addListener(pano, 'pov_changed', () => { const arrow = mapInner.querySelector('.naver-marker-arrow'); if(arrow) arrow.style.transform = `rotate(${pano.getPov().pan}deg)`; });
     closeBtn.onclick = resetNaverRoadview;
     naver.maps.Event.addListener(map, "idle", () => syncFromNaver(side));
     side.map = map;
@@ -434,8 +492,10 @@ function toggleKakaoMode(side, mode, wrapper){
   buttons.forEach(b => { if(b.getAttribute('data-mode') !== 'district') b.classList.remove('active'); });
   const targetBtn = side.dom.toolbar.querySelector(`button[data-mode="${mode}"]`);
   if(targetBtn) targetBtn.classList.add('active');
+
   if(side.gis.mode === 'roadview' && mode !== 'roadview') closeKakaoRoadview(side, side.dom.rvDiv, side.dom.mapDiv, side.dom.closeBtn);
   side.gis.mode = mode;
+
   if(mode === 'roadview'){
     side.map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
     if(!side.gis.statusEl){
@@ -455,7 +515,7 @@ function onKakaoMapClick(side, mouseEvent, rvDiv, mapDiv, closeBtn){
       if(side.gis.statusEl) { side.gis.statusEl.remove(); side.gis.statusEl = null; }
       rvDiv.style.display = 'block'; closeBtn.style.display = 'block'; mapDiv.classList.add('minimap-style');
       setTimeout(() => { side.map.relayout(); side.panorama.relayout(); moveKakaoRoadview(side, pos); }, 300);
-    } else moveKakaoRoadview(side, pos);
+    } else { moveKakaoRoadview(side, pos); }
     return;
   }
   if(side.gis.mode === 'distance' || side.gis.mode === 'area') {
@@ -475,7 +535,8 @@ function moveKakaoRoadview(side, pos) {
     if(panoId) {
       side.panorama.setPanoId(panoId, pos);
       if(side.gis.walker) side.gis.walker.setPosition(pos);
-      else side.gis.walker = new kakao.maps.CustomOverlay({ position: pos, content: createWalkerContent(0), map: side.map });
+      else if (side.roadviewActive) { side.gis.walker = new kakao.maps.CustomOverlay({ position: pos, content: createWalkerContent(0), map: side.map }); }
+      map.setCenter(pos);
     }
   });
 }
@@ -516,12 +577,28 @@ function bindRoadviewSync() {
       let lat, lng;
       if (fromSide.type === 'google' || fromSide.type === 'naver') { const p = fromPano.getPosition(); lat = p.lat(); lng = p.lng(); }
       else { const p = fromPano.getPosition(); lat = p.getLat(); lng = p.getLng(); }
+      
+      if (toSide.type === 'naver') { 
+          const p = toPano.getPosition(); 
+          const curLat = p.lat(); const curLng = p.lng(); 
+          const dist = Math.abs(curLat - lat) + Math.abs(curLng - lng);
+          if(dist < 0.00001) return;
+      }
+
       rvSyncing = true;
       if (toSide.type === 'google') toPano.setPosition({ lat, lng });
       else if (toSide.type === 'naver') { const nPos = new naver.maps.LatLng(lat, lng); toPano.setPosition(nPos); toSide.map.setCenter(nPos); toSide.naverState.marker.setPosition(nPos); }
       else if (toSide.type === 'kakao') {
         kakaoRvClient.getNearestPanoId(new kakao.maps.LatLng(lat, lng), 50, (id) => {
-          if (id) { const np = new kakao.maps.LatLng(lat, lng); toPano.setPanoId(id, np); toSide.map.setCenter(np); if(toSide.gis.walker) toSide.gis.walker.setPosition(np); }
+          if (id) { 
+              const np = new kakao.maps.LatLng(lat, lng); 
+              toPano.setPanoId(id, np); 
+              toSide.map.setCenter(np); 
+              if (toSide.roadviewActive) {
+                  if(toSide.gis.walker) toSide.gis.walker.setPosition(np); 
+                  else toSide.gis.walker = new kakao.maps.CustomOverlay({ position: np, content: createWalkerContent(0), map: toSide.map });
+              }
+          }
         });
       }
       setTimeout(() => { rvSyncing = false; }, 300);
