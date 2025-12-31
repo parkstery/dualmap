@@ -28,20 +28,17 @@
     }
     
     /* [요구사항] 히스토리 팝업 위치 조정 */
-
-    #suggestList {
-      position: absolute; top: 38px; 
-      left: 6px; /* 패널 좌측(padding 고려)에 맞춤 */
-      width: 180px; max-height: 400px; 
-      overflow-y: auto; background: #fff; border: 1px solid #888; z-index: 2000; display: none;
-    }
     #historySelect { 
-        display: none; position: absolute; top: 38px; 
-        left: 186px; /* suggestList 좌측(6) + 너비(180)에 맞춤 */
-        width: 150px; max-height: 200px; padding: 4px; 
-        font-size: 14px; z-index: 2001; border: 1px solid #888; 
-        background: #fff; color: #333; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        display: none; 
+        position: absolute;
+        top: 34px; left: 0;
+        width: 180px; height: auto;
+        max-height: 200px; padding: 4px; 
+        font-size: 14px; z-index: 2001;
+        border: 1px solid #888; background: #fff; color: #333;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
     }
+
     #container{
         display:flex; 
         /* 기본: 가로 배치 */
@@ -68,7 +65,11 @@
     .padlet-link:hover { background: #4DC4FF; color: #fff; }
 
     /* 자동완성 */
-
+    #suggestList{
+      position:absolute; top:34px; left:0;
+      width:250px; max-height:500px; overflow-y:auto; background:#fff;
+      border:1px solid #888; z-index:2000; display:none;
+    }
     #suggestList div{padding:8px 10px; border-bottom:1px solid #eee; cursor:pointer; color:black; font-size: 14px;}
     #suggestList div:hover, #suggestList div.active{background:#cce5ff;}
 
@@ -85,7 +86,7 @@
     select#leftSelect, select#rightSelect { width: 60px; height: 28px; font-size: 13px; border-radius: 3px; }
     
     #clearSearchBtn { 
-        padding: 0; height: 29px; width: 24px;
+        padding: 0; height: 29px; width: 28px;
         cursor: pointer; background: #fff;
         border: 1px solid #ccc; border-radius: 3px;
         display: flex; align-items: center; justify-content: center;
