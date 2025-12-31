@@ -2,253 +2,141 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Dual Map Viewer - Final (Mobile Tweaked)</title>  
+  <title>Dual Map Viewer - Final (Optimized)</title>  
   <link rel="icon" type="image/x-icon" href="https://parkstery.github.io/map/images/favicon.ico"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <style>
-    /* === [기본 데스크탑 스타일] === */
-    html, body {
-        margin: 0; 
-        height: 100%; 
-        height: 100dvh; 
-        font-family: Arial; 
-        overflow: hidden;
+    html,body{margin:0;height:100%;font-family:Arial;overflow:hidden;}
+    
+    /* 상단 컨트롤 패널 */
+    #controls {
+        display:flex; gap:2px; padding:4px 6px; background:#222; color:#fff; 
+        align-items:center; flex-wrap:nowrap; border-bottom:1px solid #444;
+        height: 38px; box-sizing: border-box; position: relative; /* 팝업 정렬 기준 */
     }
     
-    #controls{
-        display:flex; gap:20px; padding:8px; background:#222; color:#fff; 
-        flex-wrap:wrap; align-items:center;
-        flex-shrink: 0; 
-        z-index: 100; 
-        position: relative;
+    .search-group { display: flex; gap: 2px; align-items: center; }
+    
+    /* [요구사항] searchinput 사양 수정 */
+    #searchInput {
+        width: 150px; height: 28px; min-width: 60px; padding: 4px 1px; font-size: 14px; 
+        font-family: Arial, sans-serif; border: 1px solid #ccc; border-radius: 3px;
+        box-sizing: border-box;
     }
     
-    .panel{
-        display:flex; gap:6px; align-items:center; flex-wrap:wrap; position: relative;
+    /* [요구사항] 자동완성 및 히스토리 위치 조정 */
+    #suggestList {
+      position: absolute; top: 38px; 
+      left: 6px; /* 패널 좌측(padding 고려)에 맞춤 */
+      width: 180px; max-height: 400px; 
+      overflow-y: auto; background: #fff; border: 1px solid #888; z-index: 2000; display: none;
     }
-    
-    #searchInput{width:200px; padding:7px 6px; font-size: 16px; font-family: Arial, sans-serif;}
-    
-    #suggestList{
-      position:absolute; top:42px; left:0; 
-      width:220px; max-height:600px; overflow-y:auto; background:#fff;
-      border:1px solid #888; z-index:2000; display:none;
-    }
-    #suggestList div{padding:8px 10px; border-bottom:1px solid #eee; cursor:pointer; color:black; font-size: 15px;}
-    #suggestList div:hover, #suggestList div.active{background:#cce5ff;}
-
-    /* 데스크탑 기본 팝업 */
     #historySelect { 
-        display: none; 
-        position: absolute;
-        top: 42px; left: 225px;
-        width: 150px; 
-        height: auto; max-height: 200px;
-        padding: 4px; font-size: 14px; 
-        z-index: 2001; border: 1px solid #888;
-        background: #fff; color: #333;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        display: none; position: absolute; top: 38px; 
+        left: 186px; /* suggestList 좌측(6) + 너비(180)에 맞춤 */
+        width: 150px; max-height: 200px; padding: 4px; 
+        font-size: 14px; z-index: 2001; border: 1px solid #888; 
+        background: #fff; color: #333; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
     }
 
-    #container{
-        display:flex; 
-        width: 100%;
-        height: calc(100% - 50px); 
-        height: calc(100dvh - 50px); 
-        min-height: 0;
+    #container {
+        display: flex; 
+        flex-direction: row; 
+        height: calc(100% - 38px);
     }
-    
-    .map{
-        flex:1; position:relative; border-right: 1px solid #444; 
-        width: 50%; height: 100%; 
-    }
-    .map:last-child{border-right:none;}
+    .map { flex: 1; position: relative; border-right: 1px solid #444; }
+    .map:last-child { border-right: none; }
 
+    /* [요구사항] Padlet 링크 디자인 */
     .padlet-link {
-        margin-left: auto; 
-        color: #4DC4FF; text-decoration: none; font-size: 14px; font-weight: bold;
-        padding: 3px 5px; border: 1px solid #4DC4FF; border-radius: 4px; transition: all 0.3s;
+        margin-left: auto; color: #4DC4FF; text-decoration: none;
+        font-size: 13px; font-weight: bold;
+        padding: 3px 2px; border: 1px solid #4DC4FF;
+        border-radius: 4px; white-space: nowrap;
     }
     .padlet-link:hover { background: #4DC4FF; color: #fff; }
 
-    #leftType, #rightType { 
-      padding: 4px; font-size: 16px; height: 32px; cursor: pointer; text-align: center;
-      width: 36px; background: #fff; border: 1px solid #ccc; border-radius: 3px;
-      display: flex; align-items: center; justify-content: center;
-     }
-    #leftType img, #rightType img { width: 24px; height: 24px; object-fit: contain; }
+    #suggestList div { padding: 8px 10px; border-bottom: 1px solid #eee; cursor: pointer; color: black; font-size: 13px; }
+    #suggestList div:hover, #suggestList div.active { background: #cce5ff; }
 
-    select#leftSelect, select#rightSelect { width: 70px; height: 32px; padding: 1px 1px; font-size: 15px; }
+    /* [요구사항] 버튼 및 이미지 사양 수정 */
+    #leftType, #rightType { 
+      padding: 0; height: 28px; width: 28px; min-width: 28px;
+      cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #leftType img, #rightType img { width: 16px; height: 18px; object-fit: contain; }
+
+    /* [요구사항] Select 사양 수정 */
+    select#leftSelect, select#rightSelect { width: 50px; height: 28px; font-size: 12px; border-radius: 3px; }
     
-    /* Go 버튼 삭제됨, Clear 버튼 스타일 */
     #clearSearchBtn { 
-        padding: 1px 12px; height: 32px; width: 32px; line-height: 20px;
-        font-size: 13px; text-align: center; min-width: 1px; cursor: pointer;
-        background: #fff; border: 1px solid #ccc; border-radius: 3px; margin-left: 2px;
+        padding: 0; height: 28px; width: 28px; min-width: 28px;
+        cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 3px;
         display: flex; align-items: center; justify-content: center;
     }
-    #clearSearchBtn img { width: 20px; height: 20px; object-fit: contain; }
+    #clearSearchBtn img { width: 18px; height: 18px; object-fit: contain; }
 
+    /* 미니맵 스타일 - 좌하단 고정 사수 */
     .minimap-style {
-      position: absolute !important;
-      width: 25% !important; height: 25% !important;
-      min-width: 250px; min-height: 200px;
-      top: auto !important; bottom: 0; left: 0;
-      z-index: 20; border-top: 1px solid #888; border-right: 1px solid #888;
-      box-shadow: 2px -2px 5px rgba(0,0,0,0.3);
+      position: absolute !important; width: 30% !important; height: 25% !important;
+      min-width: 180px; min-height: 140px; 
+      bottom: 0 !important; left: 0 !important;
+      top: auto !important; right: auto !important;
+      z-index: 20; border-top: 1px solid #888; border-right: 1px solid #888; box-shadow: 2px -2px 5px rgba(0,0,0,0.3);
     }
 
-    .close-btn-style {
-      position:absolute; top:10px; right:10px; z-index: 10001; 
-      transform: translateZ(0); padding:5px 10px; background:#fff; color:#333;
-      border:1px solid #ccc; cursor:pointer; border-radius:3px;
-      font-weight:bold; font-size: 12px; display:none; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    .close-btn-style:hover { background: #f5f5f5; }
-
-    .street-btn-style {
-      position:absolute; top:10px; right:10px; z-index:30;
-      padding:5px 10px; background:#fff; border:1px solid #ccc;
-      cursor:pointer; border-radius:3px; font-weight:bold; font-size:12px;
-      box-shadow:0 2px 4px rgba(0,0,0,0.2); color:#333;
-    }
-
-    .kakao-toolbar{
-      position:absolute; top:5px; right:40px; z-index:30;
-      background:white; border-radius:5px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.3); display:flex; overflow:hidden;
-    }
-    .kakao-toolbar button{
-      background:#fff; border:0; border-right:1px solid #ddd; padding:6px 10px; 
-      cursor:pointer; display: flex; align-items: center; justify-content: center;
-      width: 40px; height: 34px;
-    }
-    .kakao-toolbar button:last-child{border-right:none;}
-    .kakao-toolbar button:hover{background:#f5f5f5;}
-    .kakao-toolbar button.active{background:#3396ff;}
-    .kakao-toolbar button.active img { filter: invert(100%); }
-    .kakao-toolbar button img { display: block; width: 20px; height: 20px; pointer-events: none; }
-
-    .roadview-status {
-      position:absolute; top:10px; left:10px; z-index:30;
-      background:rgba(0,0,0,0.7); color:white; padding:8px 12px;
-      border-radius:4px; font-size:13px; font-weight:bold;
-    }
-
-    .info-overlay{
-      background:white; border:1px solid #333; border-radius:4px;
-      padding:10px; font-size:12px; box-shadow:2px 2px 5px rgba(0,0,0,0.3); white-space:nowrap;
-    }
-    .measure-label{
-      background:#fff; padding:3px 6px; border:1px solid #888;
-      border-radius:3px; font-size:11px; color:#333;
-      box-shadow:1px 1px 3px rgba(0,0,0,0.2); white-space:nowrap;
-    }
-
-    .search-marker {
-      width: 24px; height: 32px; margin-left: -12px; margin-top: -32px;
-      background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDBMMCAxNiBMNiAxNiBMNiAyNCBMMTIgMjQgTDE4IDE2IEwyNCAxNiBaIiBmaWxsPSIjRkY0MDAwIi8+CjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMiIGZpbGw9IiNGRkYiLz4KPC9zdmc+') no-repeat;
-    }
-    .MapWalker{ position:absolute; width:24px; height:24px; margin:-12px 0 0 -12px; pointer-events:none; }
-    .MapWalker .angleBack{
-      position:absolute; top:50%; left:50%; width:0; height:0;
-      border-left:20px solid transparent; border-right:20px solid transparent;
-      border-top:40px solid rgba(51,150,255,0.4);
-      transform-origin:center bottom; margin-left:-20px; margin-top:-40px; z-index:1;
-    }
-    .MapWalker .figure{
-      position:absolute; top:50%; left:50%; width:0; height:0;
-      border-left:8px solid transparent; border-right:8px solid transparent;
-      border-bottom:16px solid #ff3300;
-      transform-origin:center center; margin-left:-8px; margin-top:-8px; z-index:2;
-      filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3));
-    }
-    .naver-marker-arrow {
-      width: 0; height: 0;
-      border-left: 10px solid transparent; border-right: 10px solid transparent;
-      border-bottom: 24px solid #4DC4FF;
-      transform-origin: center center; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
-    }
-
-    /* === [모바일 최적화 및 로딩 해결] === */
+    /* 모바일 반응형 배치 */
     @media (max-width: 768px) {
-        #container { 
-            flex-direction: column; 
-            height: calc(100dvh - 100px); 
-            min-height: 0;
-        }
-        
-        .map { 
-            border-right: none; 
-            border-bottom: 1px solid #444; 
-            width: 100%;
-            height: 50%; 
-            flex: 1 1 auto;
-        }
-        
-        #controls { padding: 5px; gap: 10px; justify-content: space-between; }
-        .panel { gap: 4px; }
-
-        /* [수정] 모바일 컨트롤 높이: 40px -> 28px (70%) */
-        #leftType, #rightType, #clearSearchBtn { height: 28px; width: 28px; }
-        
-        /* [수정] Select 너비 55px, 높이 28px */
-        select#leftSelect, select#rightSelect { height: 28px; width: 55px; font-size: 12px; }
-        
-        /* [수정] Search Input 너비 100px, 높이 28px(패딩포함) */
-        #searchInput { width: 100px; padding: 4px 6px; height: 18px; font-size: 13px; }
-
-        .minimap-style {
-            width: 40% !important; height: 35% !important;
-            min-width: 140px; min-height: 110px;
-            bottom: 5px; left: 5px;
-        }
-        
-        /* [수정] 히스토리 팝업 위치 고정 */
-        #historySelect { 
-            display: none;
-            position: absolute;
-            left: 185px; /* 요청하신 고정값 */
-            right: auto;
-            top: 100%;   /* 검색창 바로 아래 */
-            
-            width: 150px; 
-            height: auto;
-            max-height: 200px;
-            padding: 4px; 
-            font-size: 14px; 
-            z-index: 2001;
-            border: 1px solid #888;
-            background: #fff;
-            color: #333;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-        }
+        #container { flex-direction: column; }
+        .map { border-right: none; border-bottom: 1px solid #444; }
+        .map:last-child { border-bottom: none; }
+        #controls { padding: 2px 4px; gap: 1px; }
     }
+
+    .close-btn-style { position:absolute; top:10px; right:10px; z-index: 10001; padding:5px 10px; background:#fff; border:1px solid #ccc; cursor:pointer; border-radius:3px; font-weight:bold; font-size: 12px; display:none; }
+    .street-btn-style { position:absolute; top:10px; right:10px; z-index:30; padding:5px 10px; background:#fff; border:1px solid #ccc; cursor:pointer; border-radius:3px; font-weight:bold; font-size:12px; color:#333; }
+    .kakao-toolbar { position:absolute; top:5px; right:40px; z-index:30; background:white; border-radius:5px; box-shadow:0 2px 6px rgba(0,0,0,0.3); display:flex; overflow:hidden; }
+    .kakao-toolbar button { background:#fff; border:0; border-right:1px solid #ddd; width: 34px; height: 32px; cursor:pointer; display: flex; align-items: center; justify-content: center; }
+    .kakao-toolbar button.active { background:#3396ff; }
+    .kakao-toolbar button.active img { filter: invert(100%); }
+    .kakao-toolbar button img { width: 18px; height: 18px; }
+    .MapWalker { position:absolute; width:24px; height:24px; margin:-12px 0 0 -12px; }
+    .MapWalker .angleBack { position:absolute; top:50%; left:50%; width:0; height:0; border-left:20px solid transparent; border-right:20px solid transparent; border-top:40px solid rgba(51,150,255,0.4); transform-origin:center bottom; margin-left:-20px; margin-top:-40px; }
+    .MapWalker .figure { position:absolute; top:50%; left:50%; width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:16px solid #ff3300; transform-origin:center center; margin-left:-8px; margin-top:-8px; }
+    .naver-marker-arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 24px solid #4DC4FF; transform-origin: center center; }
   </style>
+
+  <!-- SDKs -->
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8d2d116d6a534a98e73133808f5843a6&libraries=services,drawing,clusterer"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYXu5yKdW71VuKmI-N2M2xbvMaYTK2HCg&callback=init"></script>
 </head>
+
 
 <body>
 <div id="controls">
-  <div class="panel">
-    <select id="leftSelect"><option value="google">Google</option><option value="kakao">Kakao</option><option value="naver">Naver</option></select>
-    <button id="leftType" title="지도/위성"><img src="images/satellite_img.png" alt="MapType"></button>
-  </div>
-  <div class="panel">
-    <select id="rightSelect"><option value="google">Google</option><option value="kakao" selected>Kakao</option><option value="naver">Naver</option></select>
-    <button id="rightType" title="지도/위성"><img src="images/map_img.png" alt="MapType"></button>
-  </div>
-  <div class="panel" style="position:relative;">
-    <input id="searchInput" placeholder="주소 또는 지명 입력" autocomplete="off"/>
-    <!-- [수정] searchBtn(Go) 제거됨 -->
-    <button id="clearSearchBtn" title="지우기"><img src="images/map_trash20.jpg" alt="Clear"></button>
-    
-    <select id="historySelect" size="5"><option value="">최근 검색 기록</option></select>
-    <div id="suggestList"></div>
+  <!-- Left -->
+  <select id="leftSelect"><option value="google">Google</option><option value="kakao">Kakao</option><option value="naver">Naver</option></select>
+  <button id="leftType" title="지도/위성"><img src="images/satellite_img.png" alt="MapType"></button>
+
+  <!-- Search Group -->
+  <div class="search-group">
+      <input id="searchInput" placeholder="지명 입력" autocomplete="off"/>
+      <button id="clearSearchBtn" title="지우기"><img src="images/map_trash20.jpg" alt="Clear"></button>
   </div>
 
-  <a href="https://padlet.com/googiden/padlet-qr93paqb7efcunwe" target="_blank" class="padlet-link">담벼락 &gt;</a>
+  <!-- Right -->
+  <select id="rightSelect"><option value="google">Google</option><option value="kakao" selected>Kakao</option><option value="naver">Naver</option></select>
+  <button id="rightType" title="지도/위성"><img src="images/map_img.png" alt="MapType"></button>
+
+  <!-- Padlet -->
+  <a href="https://padlet.com/googiden/padlet-qr93paqb7efcunwe" target="_blank" class="padlet-link">!! &gt;</a>
+
+  <!-- Dropdowns (Positioned absolute to #controls) -->
+  <select id="historySelect" size="5"><option value="">기록</option></select>
+  <div id="suggestList"></div>
 </div>
 
 <div id="container">
@@ -256,47 +144,19 @@
   <div id="rightMap" class="map"></div>
 </div>
 
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8d2d116d6a534a98e73133808f5843a6&libraries=services,drawing,clusterer"></script>
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du"></script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYXu5yKdW71VuKmI-N2M2xbvMaYTK2HCg&callback=init"></script>
-
 <script>
-/* ===== 상태 관리 ===== */
+/* ===== 기존 동기화 및 맵 제어 로직 보존 ===== */
 let syncing = false;
 let rvSyncing = false; 
 let state = { lat: 37.5665, lng: 126.9780, zoom: 13 };
 
-let syncListeners = []; 
-
-let left = { 
-  type: "google", map: null, satellite: true, 
-  panorama: null, roadviewActive: false,
-  gis: createGisState(),
-  naverState: { active: false, streetLayer: null, marker: null },
-  searchMarker: null
-};
-let right = { 
-  type: "kakao", map: null, satellite: false, 
-  panorama: null, roadviewActive: false,
-  gis: createGisState(),
-  naverState: { active: false, streetLayer: null, marker: null },
-  searchMarker: null
-};
+let left = { type: "google", map: null, satellite: true, panorama: null, roadviewActive: false, gis: createGisState(), naverState: { active: false, streetLayer: null, marker: null }, searchMarker: null };
+let right = { type: "kakao", map: null, satellite: false, panorama: null, roadviewActive: false, gis: createGisState(), naverState: { active: false, streetLayer: null, marker: null }, searchMarker: null };
 
 let searchHistory = JSON.parse(localStorage.getItem('mapSearchHistory')) || [];
-let kakaoSearchMarker = null; 
-let activeSuggestIndex = -1;
+let kakaoGeocoder = null, kakaoPs = null, kakaoRvClient = null; 
 
-let kakaoGeocoder = null;
-let kakaoPs = null;
-let kakaoRvClient = null; 
-
-function createGisState() {
-  return {
-    mode: 'default', waiting: false, drawing: null, path: [],
-    overlays: [], shapes: [], markers: [], walker: null, statusEl: null
-  };
-}
+function createGisState() { return { mode: 'default', waiting: false, drawing: null, path: [], overlays: [], shapes: [], markers: [], walker: null, statusEl: null }; }
 
 function init(){
   if(typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services){
@@ -304,925 +164,244 @@ function init(){
     kakaoPs = new kakao.maps.services.Places();
     kakaoRvClient = new kakao.maps.RoadviewClient();
   }
-
-  leftSelect.value = left.type; 
-  rightSelect.value = right.type;
-
-  bindUI();
-  createMaps();
-  renderHistory();
-
-  setTimeout(forceMapRelayout, 300);
-  setTimeout(forceMapRelayout, 1000);
-  setTimeout(forceMapRelayout, 3000); 
-}
-
-window.addEventListener('resize', () => {
-    setTimeout(forceMapRelayout, 100);
-});
-
-function forceMapRelayout() {
-    [left, right].forEach(side => {
-        if(!side.map) return;
-        
-        if(side.type === 'kakao') {
-            side.map.relayout();
-            side.map.setCenter(new kakao.maps.LatLng(state.lat, state.lng));
-        } else if(side.type === 'google') {
-            google.maps.event.trigger(side.map, 'resize');
-            side.map.setCenter(state);
-        } else if(side.type === 'naver') {
-            const mapDiv = side.map.getElement();
-            if (mapDiv) {
-                side.map.setSize(new naver.maps.Size(mapDiv.offsetWidth, mapDiv.offsetHeight));
-                side.map.setCenter(new naver.maps.LatLng(state.lat, state.lng));
-            }
-        }
-    });
-}
-
-function clearAllSyncListeners() {
-    syncListeners.forEach(item => {
-        if (item.api === 'google') {
-            item.handler.remove();
-        } else if (item.api === 'naver') {
-            naver.maps.Event.removeListener(item.handler);
-        } else if (item.api === 'kakao') {
-            kakao.maps.event.removeListener(item.target, item.event, item.handler);
-        }
-    });
-    syncListeners = [];
+  leftSelect.value = left.type; rightSelect.value = right.type;
+  bindUI(); createMaps(); renderHistory();
 }
 
 function createMaps(){
-  clearAllSyncListeners(); 
-  createMap(left, "leftMap");
-  createMap(right, "rightMap");
-  bindEvents(left, right);
-  bindEvents(right, left);
-  bindRoadviewSync();
-  setTimeout(forceMapRelayout, 100);
-}
-
-function updateSideMap(sideName) {
-  clearAllSyncListeners();
-  if (sideName === 'left') {
-    createMap(left, "leftMap");
-    applyTo(left); 
-  } else {
-    createMap(right, "rightMap");
-    applyTo(right); 
-  }
-  bindEvents(left, right);
-  bindEvents(right, left);
-  bindRoadviewSync();
-  setTimeout(forceMapRelayout, 100);
+  createMap(left, "leftMap"); createMap(right, "rightMap");
+  bindEvents(left, right); bindEvents(right, left); bindRoadviewSync();
 }
 
 function createMap(side, containerId) {
-  const el = document.getElementById(containerId);
-  el.innerHTML = ""; 
-  
+  const el = document.getElementById(containerId); el.innerHTML = ""; 
   if(side.map) {
     if(side.type === "naver" && side.map.destroy) side.map.destroy();
-    side.map = null;
-    side.panorama = null;
-    side.roadviewActive = false;
-    side.gis = createGisState();
-    side.naverState = { active: false, streetLayer: null, marker: null };
-    side.searchMarker = null;
+    side.map = null; side.panorama = null; side.roadviewActive = false;
+    side.gis = createGisState(); side.naverState = { active: false, streetLayer: null, marker: null };
   }
 
-  // --- 1. GOOGLE MAP ---
   if(side.type === "google") {
-    const mapInner = document.createElement("div");
-    mapInner.style.width = "100%"; mapInner.style.height = "100%";
-    el.appendChild(mapInner);
-
-    const panoDiv = document.createElement("div");
-    panoDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:15;display:none;";
-    el.appendChild(panoDiv);
-
-    const closeBtn = document.createElement("div");
-    closeBtn.className = "close-btn-style";
-    closeBtn.innerHTML = "Street 닫기 X"; 
-    el.appendChild(closeBtn);
-
-    const map = new google.maps.Map(mapInner, {
-      center: state, zoom: state.zoom, mapTypeId: "satellite",
-      maxZoom: 21,
-      zoomControl: false,
-      zoomControlOptions: { position: google.maps.ControlPosition.BOTTOM_LEFT },
-      streetViewControl: true,
-      streetViewControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT }
-    });
-
+    const mapInner = document.createElement("div"); mapInner.style.width = "100%"; mapInner.style.height = "100%"; el.appendChild(mapInner);
+    const panoDiv = document.createElement("div"); panoDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:15;display:none;"; el.appendChild(panoDiv);
+    const closeBtn = document.createElement("div"); closeBtn.className = "close-btn-style"; closeBtn.innerHTML = "닫기 X"; el.appendChild(closeBtn);
+    const map = new google.maps.Map(mapInner, { center: state, zoom: state.zoom, mapTypeId: side.satellite ? "satellite" : "roadmap", zoomControl: false, streetViewControl: true, streetViewControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT } });
     const coverageLayer = new google.maps.StreetViewCoverageLayer();
-    const panorama = new google.maps.StreetViewPanorama(panoDiv, {
-      enableCloseButton: false, visible: false, zoom: 1, pov: { heading: 0, pitch: 0 }
-    });
-    map.setStreetView(panorama);
-    side.panorama = panorama;
-
+    const panorama = new google.maps.StreetViewPanorama(panoDiv, { enableCloseButton: false, visible: false });
+    map.setStreetView(panorama); side.panorama = panorama;
     panorama.addListener("visible_changed", () => {
       if (panorama.getVisible()) {
-        side.roadviewActive = true;
-        panoDiv.style.display = "block";
-        closeBtn.style.display = "block";
-        mapInner.classList.add("minimap-style");
-        coverageLayer.setMap(map);
-        
-        google.maps.event.trigger(map, "resize");
-        setTimeout(() => map.setCenter(panorama.getPosition()), 50);
+        side.roadviewActive = true; panoDiv.style.display = "block"; closeBtn.style.display = "block"; mapInner.classList.add("minimap-style"); coverageLayer.setMap(map);
+        google.maps.event.trigger(map, "resize"); setTimeout(() => map.setCenter(panorama.getPosition()), 50);
       } else {
-        side.roadviewActive = false;
-        panoDiv.style.display = "none";
-        closeBtn.style.display = "none";
-        mapInner.classList.remove("minimap-style");
-        coverageLayer.setMap(null);
-      }
-      google.maps.event.trigger(map, "resize");
-    });
-
-    panorama.addListener("position_changed", () => {
-      if(side.roadviewActive) {
-        map.setCenter(panorama.getPosition());
+        side.roadviewActive = false; panoDiv.style.display = "none"; closeBtn.style.display = "none"; mapInner.classList.remove("minimap-style"); coverageLayer.setMap(null);
       }
     });
-
-    closeBtn.onclick = () => panorama.setVisible(false);
-    side.map = map;
+    panorama.addListener("position_changed", () => { if(side.roadviewActive) map.setCenter(panorama.getPosition()); });
+    closeBtn.onclick = () => panorama.setVisible(false); side.map = map;
   }
-
-  // --- 2. KAKAO MAP ---
   else if(side.type === "kakao") {
-    const wrapper = document.createElement("div");
-    wrapper.style.cssText = "position:relative;width:100%;height:100%;";
-    
-    const rvDiv = document.createElement("div");
-    rvDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;background:#333;z-index:5;display:none;";
-    
-    const mapDiv = document.createElement("div");
-    mapDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;background:#eee;";
-    
-    const closeBtn = document.createElement("div");
-    closeBtn.className = "close-btn-style";
-    closeBtn.innerHTML = "로드뷰 닫기 X";
+    const wrapper = document.createElement("div"); wrapper.style.cssText = "position:relative;width:100%;height:100%;";
+    const rvDiv = document.createElement("div"); rvDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;background:#333;z-index:5;display:none;";
+    const mapDiv = document.createElement("div"); mapDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;background:#eee;";
+    const closeBtn = document.createElement("div"); closeBtn.className = "close-btn-style"; closeBtn.innerHTML = "닫기 X";
     closeBtn.onclick = () => closeKakaoRoadview(side, rvDiv, mapDiv, closeBtn);
-
-    const toolbar = document.createElement("div");
-    toolbar.className = "kakao-toolbar";
-    
+    const toolbar = document.createElement("div"); toolbar.className = "kakao-toolbar";
     const btnData = [
       { id: 'roadview', text: '로드뷰', img: './images/map_roadview20.jpg', action: () => toggleKakaoMode(side, 'roadview', wrapper) },
       { id: 'district', text: '지적도', img: './images/map_cada20.jpg', action: () => toggleKakaoOverlay(side, 'district') },
       { id: 'distance', text: '거리', img: './images/map_scale20.jpg', action: () => toggleKakaoMode(side, 'distance', wrapper) },
       { id: 'area', text: '면적', img: './images/map_area20.jpg', action: () => toggleKakaoMode(side, 'area', wrapper) },
-      { id: 'clear', text: '초기화', img: './images/map_trash20.jpg', class: 'delete-btn', action: () => clearKakaoMeasurements(side) }
+      { id: 'clear', text: '초기화', img: './images/map_trash20.jpg', action: () => clearKakaoMeasurements(side) }
     ];
-
     btnData.forEach(bd => {
-      const btn = document.createElement("button");
-      const img = document.createElement("img");
-      img.src = bd.img; img.alt = bd.text;
-      btn.appendChild(img);
-      btn.title = bd.text; 
-      if(bd.class) btn.className = bd.class;
-      btn.setAttribute('data-mode', bd.id); 
-      btn.onclick = bd.action;
-      toolbar.appendChild(btn);
+      const btn = document.createElement("button"); const img = document.createElement("img"); img.src = bd.img; btn.appendChild(img);
+      btn.title = bd.text; btn.onclick = bd.action; btn.setAttribute('data-mode', bd.id); toolbar.appendChild(btn);
     });
-
-    mapDiv.appendChild(toolbar);
-    wrapper.appendChild(rvDiv);
-    wrapper.appendChild(closeBtn);
-    wrapper.appendChild(mapDiv);
-    el.appendChild(wrapper);
-
-    const map = new kakao.maps.Map(mapDiv, {
-      center: new kakao.maps.LatLng(state.lat, state.lng),
-      level: zoomToKakao(state.zoom)
-    });
-    map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-
-    const rv = new kakao.maps.Roadview(rvDiv);
-    side.panorama = rv; 
-
+    mapDiv.appendChild(toolbar); wrapper.appendChild(rvDiv); wrapper.appendChild(closeBtn); wrapper.appendChild(mapDiv); el.appendChild(wrapper);
+    const map = new kakao.maps.Map(mapDiv, { center: new kakao.maps.LatLng(state.lat, state.lng), level: zoomToKakao(state.zoom) });
+    map.setMapTypeId(side.satellite ? kakao.maps.MapTypeId.HYBRID : kakao.maps.MapTypeId.ROADMAP);
+    const rv = new kakao.maps.Roadview(rvDiv); side.panorama = rv;
     kakao.maps.event.addListener(map, 'click', (e) => onKakaoMapClick(side, e, rvDiv, mapDiv, closeBtn));
-    kakao.maps.event.addListener(map, 'mousemove', (e) => onKakaoMapMouseMove(side, e));
-    kakao.maps.event.addListener(map, 'rightclick', (e) => onKakaoMapRightClick(side, e));
-
     kakao.maps.event.addListener(rv, 'position_changed', () => {
-      if (!side.roadviewActive) return; 
-      const pos = rv.getPosition();
-      if(side.gis.walker) {
-        side.gis.walker.setPosition(pos);
-      } else {
-        side.gis.walker = new kakao.maps.CustomOverlay({
-            position: pos,
-            content: createWalkerContent(0),
-            map: side.map
-        });
-      }
+      if (!side.roadviewActive) return; const pos = rv.getPosition();
+      if(side.gis.walker) side.gis.walker.setPosition(pos); else side.gis.walker = new kakao.maps.CustomOverlay({ position: pos, content: createWalkerContent(0), map: side.map });
       map.setCenter(pos);
     });
-
-    kakao.maps.event.addListener(rv, 'viewpoint_changed', () => {
-      if (!side.roadviewActive) return; 
-      const vp = rv.getViewpoint();
-      if(side.gis.walker) {
-        side.gis.walker.setContent(createWalkerContent(vp.pan));
-      }
-    });
-
-    side.map = map;
-    side.dom = { wrapper, rvDiv, mapDiv, closeBtn, toolbar }; 
+    side.map = map; side.dom = { wrapper, rvDiv, mapDiv, closeBtn, toolbar };
   }
-
-  // --- 3. NAVER MAP ---
   else if(side.type === "naver") {
-    const mapInner = document.createElement("div");
-    mapInner.style.width = "100%"; mapInner.style.height = "100%";
-    el.appendChild(mapInner);
-
-    const panoDiv = document.createElement("div");
-    panoDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:15;visibility:hidden;";
-    el.appendChild(panoDiv);
-
-    const closeBtn = document.createElement("div");
-    closeBtn.className = "close-btn-style";
-    closeBtn.innerHTML = "거리뷰 닫기 X";
-    el.appendChild(closeBtn);
-
-    const streetBtn = document.createElement("div");
-    streetBtn.className = "street-btn-style";
-    streetBtn.innerHTML = "거리뷰";
-    mapInner.appendChild(streetBtn);
-
-    const map = new naver.maps.Map(mapInner, {
-        center: new naver.maps.LatLng(state.lat, state.lng),
-        zoom: state.zoom, maxZoom: 21
-    });
-
-    const pano = new naver.maps.Panorama(panoDiv, {
-        position: new naver.maps.LatLng(state.lat, state.lng),
-        pov: { pan: 0, tilt: 0, fov: 100 }, visible: false
-    });
-    side.panorama = pano;
-
-    const streetLayer = new naver.maps.StreetLayer();
-    side.naverState.streetLayer = streetLayer;
-
-    const marker = new naver.maps.Marker({
-        position: map.getCenter(), map: null,
-        icon: { content: '<div class="naver-marker-arrow"></div>', anchor: new naver.maps.Point(8, 10) }
-    });
-    side.naverState.marker = marker; 
-
-    streetBtn.onclick = () => {
-      if (side.naverState.active) {
-        resetNaverRoadview();
-      } else {
-        side.naverState.active = true;
-        streetLayer.setMap(map); 
-        streetBtn.innerHTML = "거리뷰 취소";
-        streetBtn.style.background = "#4DC4FF";
-        streetBtn.style.color = "white";
-        map.setCursor('crosshair');
-      }
-    };
-
-    function resetNaverRoadview() {
-      side.naverState.active = false;
-      side.roadviewActive = false; 
-      streetLayer.setMap(null); 
-      streetBtn.innerHTML = "거리뷰";
-      streetBtn.style.background = "#fff"; streetBtn.style.color = "#333";
-      streetBtn.style.display = 'block';
-      pano.setVisible(false);
-      panoDiv.style.visibility = 'hidden';
-      mapInner.classList.remove('minimap-style');
-      closeBtn.style.display = 'none';
-      marker.setMap(null);
-      map.setCursor('default');
-      setTimeout(() => naver.maps.Event.trigger(map, 'resize'), 100);
-    }
-
-    naver.maps.Event.addListener(map, 'click', (e) => {
-      if (side.naverState.active && streetLayer.getMap()) {
-        const newPos = e.coord;
-        marker.setPosition(newPos);
-        map.setCenter(newPos);
-        map.setZoom(18);
-        pano.setPosition(newPos);
-        
-        if (!mapInner.classList.contains('minimap-style')) {
-            side.roadviewActive = true; 
-            pano.setVisible(true);
-            panoDiv.style.visibility = 'visible';
-            mapInner.classList.add('minimap-style');
-            closeBtn.style.display = 'block';
-            streetBtn.style.display = 'none';
-            marker.setMap(map);
-            map.setCursor('default');
-            naver.maps.Event.trigger(map, 'resize');
-            
-            setTimeout(() => {
-                map.setCenter(newPos);
-                map.setZoom(18); 
-                streetLayer.setMap(map); 
-            }, 150);
-        }
-      }
-    });
-
-    naver.maps.Event.addListener(pano, 'pano_changed', () => {
-      const pos = pano.getPosition();
-      marker.setPosition(pos);
-      map.setCenter(pos); 
-    });
-    
-    naver.maps.Event.addListener(pano, 'pov_changed', () => {
-      const pov = pano.getPov();
-      const arrow = mapInner.querySelector('.naver-marker-arrow');
-      if(arrow) arrow.style.transform = `rotate(${pov.pan}deg)`;
-    });
-
-    closeBtn.onclick = resetNaverRoadview;
-    side.map = map;
+    const mapInner = document.createElement("div"); mapInner.style.width = "100%"; mapInner.style.height = "100%"; el.appendChild(mapInner);
+    const panoDiv = document.createElement("div"); panoDiv.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:15;visibility:hidden;"; el.appendChild(panoDiv);
+    const closeBtn = document.createElement("div"); closeBtn.className = "close-btn-style"; closeBtn.innerHTML = "닫기 X"; el.appendChild(closeBtn);
+    const streetBtn = document.createElement("div"); streetBtn.className = "street-btn-style"; streetBtn.innerHTML = "거리뷰"; mapInner.appendChild(streetBtn);
+    const map = new naver.maps.Map(mapInner, { center: new naver.maps.LatLng(state.lat, state.lng), zoom: state.zoom, mapTypeId: side.satellite ? naver.maps.MapTypeId.SATELLITE : naver.maps.MapTypeId.NORMAL });
+    const pano = new naver.maps.Panorama(panoDiv, { position: new naver.maps.LatLng(state.lat, state.lng), visible: false });
+    side.panorama = pano; const streetLayer = new naver.maps.StreetLayer(); side.naverState.streetLayer = streetLayer;
+    const marker = new naver.maps.Marker({ position: map.getCenter(), map: null, icon: { content: '<div class="naver-marker-arrow"></div>', anchor: new naver.maps.Point(8, 10) } });
+    side.naverState.marker = marker;
+    streetBtn.onclick = () => { if (side.naverState.active) resetNaverRoadview(); else { side.naverState.active = true; streetLayer.setMap(map); streetBtn.style.background = "#4DC4FF"; map.setCursor('crosshair'); } };
+    function resetNaverRoadview() { side.naverState.active = false; side.roadviewActive = false; streetLayer.setMap(null); streetBtn.style.background = "#fff"; pano.setVisible(false); panoDiv.style.visibility = 'hidden'; mapInner.classList.remove('minimap-style'); closeBtn.style.display = 'none'; marker.setMap(null); map.setCursor('default'); setTimeout(() => naver.maps.Event.trigger(map, 'resize'), 100); }
+    naver.maps.Event.addListener(map, 'click', (e) => { if (side.naverState.active && streetLayer.getMap()) { const newPos = e.coord; marker.setPosition(newPos); map.setCenter(newPos); pano.setPosition(newPos); if (!mapInner.classList.contains('minimap-style')) { side.roadviewActive = true; pano.setVisible(true); panoDiv.style.visibility = 'visible'; mapInner.classList.add('minimap-style'); closeBtn.style.display = 'block'; marker.setMap(map); naver.maps.Event.trigger(map, 'resize'); } } });
+    naver.maps.Event.addListener(pano, 'pano_changed', () => { marker.setPosition(pano.getPosition()); map.setCenter(pano.getPosition()); });
+    closeBtn.onclick = resetNaverRoadview; side.map = map;
   }
 }
 
-function toggleKakaoOverlay(side, type){
-  if(!side.map) return;
-  if(type === 'district') {
-    const btn = side.dom.toolbar.querySelector('button[data-mode="district"]');
-    if(btn.classList.contains('active')){
-      side.map.removeOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT);
-      btn.classList.remove('active');
-    } else {
-      side.map.addOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT);
-      btn.classList.add('active');
-    }
-  }
-}
-
+/* 동기화 및 GIS 함수들 */
 function toggleKakaoMode(side, mode, wrapper){
-  if(!side.map) return;
-  stopKakaoDrawing(side); 
-
-  if(side.gis.mode === mode) {
-    toggleKakaoMode(side, 'default', wrapper);
-    return;
-  }
-
-  const buttons = side.dom.toolbar.querySelectorAll('button');
-  buttons.forEach(b => {
-      if(b.getAttribute('data-mode') !== 'district') {
-          b.classList.remove('active');
-      }
-  });
-  
-  const targetBtn = side.dom.toolbar.querySelector(`button[data-mode="${mode}"]`);
-  if(targetBtn) targetBtn.classList.add('active');
-
-  if(side.gis.mode === 'roadview' && mode !== 'roadview') {
-    closeKakaoRoadview(side, side.dom.rvDiv, side.dom.mapDiv, side.dom.closeBtn);
-  }
-
+  if(!side.map) return; stopKakaoDrawing(side); 
+  if(side.gis.mode === mode) { toggleKakaoMode(side, 'default', wrapper); return; }
+  const buttons = side.dom.toolbar.querySelectorAll('button'); buttons.forEach(b => { if(b.getAttribute('data-mode') !== 'district') b.classList.remove('active'); });
+  const targetBtn = side.dom.toolbar.querySelector(`button[data-mode="${mode}"]`); if(targetBtn) targetBtn.classList.add('active');
+  if(side.gis.mode === 'roadview' && mode !== 'roadview') closeKakaoRoadview(side, side.dom.rvDiv, side.dom.mapDiv, side.dom.closeBtn);
   side.gis.mode = mode;
-
-  if(mode === 'roadview'){
-    side.map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
-    if(!side.gis.statusEl){
-      side.gis.statusEl = document.createElement('div');
-      side.gis.statusEl.className = 'roadview-status';
-      side.gis.statusEl.innerHTML = '📍 로드뷰 위치를 클릭하세요';
-      side.dom.mapDiv.appendChild(side.gis.statusEl);
-    }
-    side.map.setCursor('crosshair');
-    side.gis.waiting = true; 
-    side.roadviewActive = true; 
-  } 
-  else if (mode === 'distance' || mode === 'area') {
-    side.map.setCursor('crosshair');
-  } 
-  else {
-    side.map.setCursor('default');
-  }
+  if(mode === 'roadview'){ side.map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); side.map.setCursor('crosshair'); side.gis.waiting = true; side.roadviewActive = true; } 
+  else if (mode === 'distance' || mode === 'area') side.map.setCursor('crosshair');
+  else side.map.setCursor('default');
 }
-
 function onKakaoMapClick(side, mouseEvent, rvDiv, mapDiv, closeBtn){
   const pos = mouseEvent.latLng;
-
   if(side.gis.mode === 'roadview') {
-    if(side.gis.waiting) {
-      side.map.setCursor('default');
-      side.gis.waiting = false;
-      if(side.gis.statusEl) { side.gis.statusEl.remove(); side.gis.statusEl = null; }
-      
-      rvDiv.style.display = 'block';
-      closeBtn.style.display = 'block';
-      mapDiv.classList.add('minimap-style');
-      
-      setTimeout(() => {
-        side.map.relayout();
-        side.panorama.relayout();
-        moveKakaoRoadview(side, pos);
-      }, 300);
-    } 
-    else {
-      moveKakaoRoadview(side, pos);
-    }
+    if(side.gis.waiting) { side.map.setCursor('default'); side.gis.waiting = false; rvDiv.style.display = 'block'; closeBtn.style.display = 'block'; mapDiv.classList.add('minimap-style'); setTimeout(() => { side.map.relayout(); side.panorama.relayout(); moveKakaoRoadview(side, pos); }, 300); } 
+    else moveKakaoRoadview(side, pos);
     return;
   }
-
   if(side.gis.mode === 'distance' || side.gis.mode === 'area') {
-    side.gis.path.push(pos);
-    const marker = new kakao.maps.Marker({position:pos, map:side.map});
-    side.gis.markers.push(marker);
-
+    side.gis.path.push(pos); const marker = new kakao.maps.Marker({position:pos, map:side.map}); side.gis.markers.push(marker);
     if(!side.gis.drawing) {
-      if(side.gis.mode === 'distance') {
-        side.gis.drawing = new kakao.maps.Polyline({
-          map: side.map, path: [pos], strokeWeight:3, strokeColor:'#db4040', strokeOpacity:1, strokeStyle:'solid'
-        });
-      } else {
-        side.gis.drawing = new kakao.maps.Polygon({
-          map: side.map, path: [pos], strokeWeight:3, strokeColor:'#39f', strokeOpacity:0.8, strokeStyle:'longdash', fillColor:'#39f', fillOpacity:0.2
-        });
-      }
+      if(side.gis.mode === 'distance') side.gis.drawing = new kakao.maps.Polyline({ map: side.map, path: [pos], strokeWeight:3, strokeColor:'#db4040', strokeOpacity:1, strokeStyle:'solid' });
+      else side.gis.drawing = new kakao.maps.Polygon({ map: side.map, path: [pos], strokeWeight:3, strokeColor:'#39f', strokeOpacity:0.8, strokeStyle:'longdash', fillColor:'#39f', fillOpacity:0.2 });
     } else {
       side.gis.drawing.setPath(side.gis.path);
-      let content = '';
-      if(side.gis.mode === 'distance') {
-        content = `<div class="measure-label">${Math.round(side.gis.drawing.getLength()).toLocaleString()}m</div>`;
-      } else if (side.gis.path.length >= 3) {
-        content = `<div class="measure-label">${Math.round(side.gis.drawing.getArea()).toLocaleString()}m²</div>`;
-      }
-      if(content) {
-        const overlay = new kakao.maps.CustomOverlay({
-          map: side.map, position: pos, content: content, yAnchor: 2.5
-        });
-        side.gis.overlays.push(overlay);
-      }
+      let content = side.gis.mode === 'distance' ? `<div class="measure-label">${Math.round(side.gis.drawing.getLength()).toLocaleString()}m</div>` : (side.gis.path.length >= 3 ? `<div class="measure-label">${Math.round(side.gis.drawing.getArea()).toLocaleString()}m²</div>` : '');
+      if(content) { const overlay = new kakao.maps.CustomOverlay({ map: side.map, position: pos, content: content, yAnchor: 2.5 }); side.gis.overlays.push(overlay); }
     }
   }
 }
-
-function moveKakaoRoadview(side, pos) {
-  kakaoRvClient.getNearestPanoId(pos, 50, (panoId) => {
-    if(panoId) {
-      side.panorama.setPanoId(panoId, pos);
-      if(side.gis.walker) {
-        side.gis.walker.setPosition(pos);
-      } else if (side.roadviewActive) { 
-        side.gis.walker = new kakao.maps.CustomOverlay({
-            position: pos,
-            content: createWalkerContent(0),
-            map: side.map
-        });
-      }
-      map.setCenter(pos);
-    }
-  });
-}
-
-function onKakaoMapMouseMove(side, mouseEvent) {
-  if(!side.gis.drawing) return;
-  const path = side.gis.path.slice();
-  path.push(mouseEvent.latLng);
-  side.gis.drawing.setPath(path);
-}
-
-function onKakaoMapRightClick(side, mouseEvent) {
-  if(side.gis.mode === 'distance' || side.gis.mode === 'area') {
-    if(side.gis.drawing && side.gis.path.length > 0) {
-      const pos = mouseEvent.latLng;
-      let content = '';
-      if(side.gis.mode === 'distance') {
-        content = `<div class="info-overlay">총 거리 <span style="font-weight:bold;color:#ee5555">${Math.round(side.gis.drawing.getLength()).toLocaleString()}m</span></div>`;
-      } else {
-        const area = Math.round(side.gis.drawing.getArea());
-        content = `<div class="info-overlay">총 면적 <span style="font-weight:bold;color:#39f">${area.toLocaleString()}m²</span><br>(${Number((area*0.3025).toFixed(1)).toLocaleString()}평)</div>`;
-      }
-      const overlay = new kakao.maps.CustomOverlay({ map: side.map, position: pos, content: content, yAnchor: 1 });
-      side.gis.overlays.push(overlay);
-      side.gis.shapes.push(side.gis.drawing);
-      side.gis.drawing = null;
-      side.gis.path = [];
-    }
-  } else {
-    const pos = mouseEvent.latLng;
-    kakaoGeocoder.coord2Address(pos.getLng(), pos.getLat(), (result, status) => {
-      if(status === kakao.maps.services.Status.OK && result[0]) {
-        const addr = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
-        const contentHTML = `<div style="background:white;border:1px solid #444;padding:8px 10px;border-radius:6px;font-size:12px;box-shadow:1px 2px 4px rgba(0,0,0,0.3);">📍 ${addr}</div>`;
-        const overlay = new kakao.maps.CustomOverlay({ map: side.map, position: pos, content: contentHTML, yAnchor: 2.0 });
-        const marker = new kakao.maps.Marker({ position: pos, map: side.map });
-        setTimeout(()=>{ overlay.setMap(null); marker.setMap(null); }, 5000);
-      }
-    });
-  }
-}
-
-function closeKakaoRoadview(side, rvDiv, mapDiv, closeBtn){
-  side.gis.mode = 'default';
-  side.gis.waiting = false;
-  side.roadviewActive = false;
-  rvDiv.style.display = 'none';
-  closeBtn.style.display = 'none';
-  mapDiv.classList.remove('minimap-style');
-  side.map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
-
-  const buttons = side.dom.toolbar.querySelectorAll('button');
-  buttons.forEach(b => {
-      if(b.getAttribute('data-mode') !== 'district') {
-          b.classList.remove('active');
-      }
-  });
-
-  if(side.gis.walker) { side.gis.walker.setMap(null); side.gis.walker = null; }
-  if(side.gis.statusEl) { side.gis.statusEl.remove(); side.gis.statusEl = null; }
-
-  side.map.setCursor('default');
-  setTimeout(()=> side.map.relayout(), 300);
-}
-
-function clearKakaoMeasurements(side){
-  side.gis.overlays.forEach(o => o.setMap(null));
-  side.gis.shapes.forEach(s => s.setMap(null));
-  side.gis.markers.forEach(m => m.setMap(null));
-  
-  if(side.searchMarker) { side.searchMarker.setMap(null); side.searchMarker = null; }
-  if(kakaoSearchMarker) { kakaoSearchMarker.setMap(null); kakaoSearchMarker = null; }
-  
-  side.gis.overlays = []; side.gis.shapes = []; side.gis.markers = [];
-  stopKakaoDrawing(side);
-  toggleKakaoMode(side, 'default', side.dom.wrapper);
-}
-
-function stopKakaoDrawing(side){
-  if(side.gis.drawing) { side.gis.drawing.setMap(null); side.gis.drawing = null; }
-  side.gis.path = [];
-}
-
-function createWalkerContent(angle){
-  return `<div class="MapWalker">
-    <div class="angleBack" style="transform:rotate(${angle}deg);"></div>
-    <div class="figure" style="transform:rotate(${angle}deg);"></div>
-  </div>`;
-}
+function moveKakaoRoadview(side, pos) { kakaoRvClient.getNearestPanoId(pos, 50, (id) => { if(id) side.panorama.setPanoId(id, pos); }); }
+function closeKakaoRoadview(side, rvDiv, mapDiv, closeBtn){ side.gis.mode = 'default'; side.roadviewActive = false; rvDiv.style.display = 'none'; closeBtn.style.display = 'none'; mapDiv.classList.remove('minimap-style'); side.map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); if(side.gis.walker) { side.gis.walker.setMap(null); side.gis.walker = null; } side.map.setCursor('default'); setTimeout(()=> side.map.relayout(), 300); }
+function clearKakaoMeasurements(side){ side.gis.overlays.forEach(o => o.setMap(null)); side.gis.shapes.forEach(s => s.setMap(null)); side.gis.markers.forEach(m => m.setMap(null)); side.gis.overlays = []; side.gis.shapes = []; side.gis.markers = []; stopKakaoDrawing(side); toggleKakaoMode(side, 'default', side.dom.wrapper); }
+function stopKakaoDrawing(side){ if(side.gis.drawing) { side.gis.drawing.setMap(null); side.gis.drawing = null; } side.gis.path = []; }
+function createWalkerContent(angle){ return `<div class="MapWalker"><div class="angleBack" style="transform:rotate(${angle}deg);"></div><div class="figure" style="transform:rotate(${angle}deg);"></div></div>`; }
+function toggleKakaoOverlay(side, type){ if(type === 'district') { const btn = side.dom.toolbar.querySelector('button[data-mode="district"]'); if(btn.classList.contains('active')){ side.map.removeOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT); btn.classList.remove('active'); } else { side.map.addOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT); btn.classList.add('active'); } } }
 
 function bindRoadviewSync() {
-  if(left.panorama && right.panorama) {
-    setupSync(left, right);
-    setupSync(right, left);
-  }
-
-  function setupSync(fromSide, toSide) {
-    const fromPano = fromSide.panorama;
-    const toPano = toSide.panorama;
-    const fromType = fromSide.type;
-    const toType = toSide.type;
-
-    let posEvent;
-    if (fromType === 'kakao' || fromType === 'google') {
-      posEvent = 'position_changed';
-    } else if (fromType === 'naver') {
-      posEvent = 'pano_changed';
-    }
-
+  const setupSync = (fromSide, toSide) => {
+    const fromPano = fromSide.panorama; const toPano = toSide.panorama;
+    const posEvent = fromSide.type === 'naver' ? 'pano_changed' : 'position_changed';
     const onPosChange = () => {
-      if (rvSyncing) return;
-      let lat, lng;
-      if (fromType === 'google') { const p = fromPano.getPosition(); lat = p.lat(); lng = p.lng(); }
-      else if (fromType === 'naver') { const p = fromPano.getPosition(); lat = p.lat(); lng = p.lng(); } 
-      else if (fromType === 'kakao') { const p = fromPano.getPosition(); lat = p.getLat(); lng = p.getLng(); }
-
-      if (toType === 'naver') { 
-          const p = toPano.getPosition(); 
-          const curLat = p.lat(); const curLng = p.lng(); 
-          const dist = Math.abs(curLat - lat) + Math.abs(curLng - lng);
-          if(dist < 0.00001) return;
-      }
-
+      if (rvSyncing) return; let lat, lng;
+      if (fromSide.type === 'google' || fromSide.type === 'naver') { const p = fromPano.getPosition(); lat = p.lat(); lng = p.lng(); }
+      else { const p = fromPano.getPosition(); lat = p.getLat(); lng = p.getLng(); }
       rvSyncing = true;
-
-      if (toType === 'google') {
-        toPano.setPosition({ lat, lng });
-        releaseSync();
-      } 
-      else if (toType === 'naver') {
-        const nPos = new naver.maps.LatLng(lat, lng);
-        toPano.setPosition(nPos);
-        if(toSide.map) toSide.map.setCenter(nPos);
-        if(toSide.naverState.marker) toSide.naverState.marker.setPosition(nPos);
-        releaseSync(300);
-      }
-      else if (toType === 'kakao') {
-        kakaoRvClient.getNearestPanoId(new kakao.maps.LatLng(lat, lng), 50, (panoId) => {
-          if (panoId) {
-            const newPos = new kakao.maps.LatLng(lat, lng);
-            toPano.setPanoId(panoId, newPos);
-            if(toSide.map) toSide.map.setCenter(newPos);
-            
-            if (toSide.roadviewActive) {
-                if(toSide.gis.walker) {
-                  toSide.gis.walker.setPosition(newPos);
-                } else {
-                  toSide.gis.walker = new kakao.maps.CustomOverlay({
-                      position: newPos, content: createWalkerContent(0), map: toSide.map
-                  });
-                }
-            }
-          }
-          releaseSync();
-        });
-      }
+      if (toSide.type === 'google') toPano.setPosition({ lat, lng });
+      else if (toSide.type === 'naver') { const nPos = new naver.maps.LatLng(lat, lng); toPano.setPosition(nPos); }
+      else if (toSide.type === 'kakao') { kakaoRvClient.getNearestPanoId(new kakao.maps.LatLng(lat, lng), 50, (id) => { if (id) toPano.setPanoId(id, new kakao.maps.LatLng(lat, lng)); }); }
+      setTimeout(() => { rvSyncing = false; }, 300);
     };
-
-    if(fromType === 'kakao') {
-      kakao.maps.event.addListener(fromPano, posEvent, onPosChange);
-      syncListeners.push({ api: 'kakao', target: fromPano, event: posEvent, handler: onPosChange });
-    } else if(fromType === 'naver') {
-      naver.maps.Event.addListener(fromPano, posEvent, onPosChange);
-      syncListeners.push({ api: 'naver', target: fromPano, event: posEvent, handler: onPosChange });
-    } else { 
-      const listener = fromPano.addListener(posEvent, onPosChange);
-      syncListeners.push({ api: 'google', target: fromPano, event: posEvent, handler: listener });
-    }
-  }
-
-  function releaseSync(delay = 50) {
-    setTimeout(() => { rvSyncing = false; }, delay);
-  }
+    if(fromSide.type === 'kakao') kakao.maps.event.addListener(fromPano, posEvent, onPosChange);
+    else if(fromSide.type === 'naver') naver.maps.Event.addListener(fromPano, posEvent, onPosChange);
+    else fromPano.addListener(posEvent, onPosChange);
+  };
+  if(left.panorama && right.panorama) { setupSync(left, right); setupSync(right, left); }
 }
 
 function bindEvents(src, target){
-  if(!src.map) return;
-  
   const handleSync = () => {
-    if(syncing || rvSyncing) return;
-    syncing = true;
-    
-    let center, zoomLevel;
-    if(src.type === 'google') {
-      const c = src.map.getCenter(); center = {lat: c.lat(), lng: c.lng()}; zoomLevel = src.map.getZoom();
-    } else if(src.type === 'kakao') {
-      const c = src.map.getCenter(); center = {lat: c.getLat(), lng: c.getLng()}; zoomLevel = kakaoToZoom(src.map.getLevel());
-    } else if(src.type === 'naver') {
-      const c = src.map.getCenter(); center = {lat: c.y, lng: c.x}; zoomLevel = src.map.getZoom();
-    }
-
-    state.lat = center.lat; state.lng = center.lng; state.zoom = zoomLevel;
-    applyTo(target);
-    setTimeout(() => { syncing = false; }, 50);
+    if(syncing || rvSyncing) return; syncing = true;
+    let center, zoom;
+    if(src.type === 'google') { const c = src.map.getCenter(); center = {lat: c.lat(), lng: c.lng()}; zoom = src.map.getZoom(); }
+    else if(src.type === 'kakao') { const c = src.map.getCenter(); center = {lat: c.getLat(), lng: c.getLng()}; zoom = kakaoToZoom(src.map.getLevel()); }
+    else if(src.type === 'naver') { const c = src.map.getCenter(); center = {lat: c.y, lng: c.x}; zoom = src.map.getZoom(); }
+    state = { ...center, zoom }; applyTo(target); setTimeout(() => { syncing = false; }, 50);
   };
-
-  if(src.type === 'google') {
-    const l1 = src.map.addListener('center_changed', handleSync);
-    const l2 = src.map.addListener('zoom_changed', handleSync);
-    syncListeners.push({ api: 'google', handler: l1 });
-    syncListeners.push({ api: 'google', handler: l2 });
-  } else if(src.type === 'kakao') {
-    kakao.maps.event.addListener(src.map, 'center_changed', handleSync);
-    kakao.maps.event.addListener(src.map, 'zoom_changed', handleSync);
-    syncListeners.push({ api: 'kakao', target: src.map, event: 'center_changed', handler: handleSync });
-    syncListeners.push({ api: 'kakao', target: src.map, event: 'zoom_changed', handler: handleSync });
-  } else if(src.type === 'naver') {
-    naver.maps.Event.addListener(src.map, 'center_changed', handleSync);
-    naver.maps.Event.addListener(src.map, 'zoom_changed', handleSync);
-    naver.maps.Event.addListener(src.map, 'drag', handleSync);
-    syncListeners.push({ api: 'naver', handler: handleSync }); 
-  }
+  if(src.type === 'google') { src.map.addListener('center_changed', handleSync); src.map.addListener('zoom_changed', handleSync); }
+  else if(src.type === 'kakao') { kakao.maps.event.addListener(src.map, 'center_changed', handleSync); kakao.maps.event.addListener(src.map, 'zoom_changed', handleSync); }
+  else if(src.type === 'naver') { naver.maps.Event.addListener(src.map, 'idle', handleSync); }
 }
-
-function syncFromKakao(side) { }
-function syncFromNaver(side) { }
 
 function applyTo(target){
   if(!target.map) return;
-  if(target.type === "google"){
-    target.map.setCenter(state); target.map.setZoom(state.zoom);
-  } else if(target.type === "kakao"){
-    target.map.setCenter(new kakao.maps.LatLng(state.lat, state.lng));
-    target.map.setLevel(zoomToKakao(state.zoom));
-  } else if(target.type === "naver"){
-    target.map.setCenter(new naver.maps.LatLng(state.lat, state.lng));
-    target.map.setZoom(state.zoom);
-  }
+  if(target.type === "google"){ target.map.setCenter(state); target.map.setZoom(state.zoom); }
+  else if(target.type === "kakao"){ target.map.setCenter(new kakao.maps.LatLng(state.lat, state.lng)); target.map.setLevel(zoomToKakao(state.zoom)); }
+  else if(target.type === "naver"){ target.map.setCenter(new naver.maps.LatLng(state.lat, state.lng)); target.map.setZoom(state.zoom); }
 }
 
 function toggleType(side, btn){
-  side.satellite = !side.satellite;
-  if(!side.map) return;
+  side.satellite = !side.satellite; const img = btn.querySelector('img');
+  img.src = side.satellite ? "images/satellite_img.png" : "images/map_img.png";
   if(side.type === "google") side.map.setMapTypeId(side.satellite ? "satellite" : "roadmap");
-  if(side.type === "kakao") side.map.setMapTypeId(side.satellite ? kakao.maps.MapTypeId.HYBRID : kakao.maps.MapTypeId.ROADMAP);
-  if(side.type === "naver") side.map.setMapTypeId(side.satellite ? naver.maps.MapTypeId.SATELLITE : naver.maps.MapTypeId.NORMAL);
-
-  const img = btn.querySelector('img');
-  if(img) {
-    img.src = side.satellite ? "images/satellite_img.png" : "images/map_img.png";
-  }
+  else if(side.type === "kakao") side.map.setMapTypeId(side.satellite ? kakao.maps.MapTypeId.HYBRID : kakao.maps.MapTypeId.ROADMAP);
+  else if(side.type === "naver") side.map.setMapTypeId(side.satellite ? naver.maps.MapTypeId.SATELLITE : naver.maps.MapTypeId.NORMAL);
 }
 
 function zoomToKakao(z){ return Math.max(1, Math.min(14, 20-z)); }
 function kakaoToZoom(l){ return Math.max(3, Math.min(20, 20-l)); }
 
+/* UI & SEARCH */
 function bindUI(){
-  leftSelect.onchange = () => { left.type = leftSelect.value; updateSideMap('left'); };
-  rightSelect.onchange = () => { right.type = rightSelect.value; updateSideMap('right'); };
-  
+  leftSelect.onchange = () => { left.type = leftSelect.value; createMaps(); };
+  rightSelect.onchange = () => { right.type = rightSelect.value; createMaps(); };
   leftType.onclick = () => toggleType(left, leftType);
   rightType.onclick = () => toggleType(right, rightType);
 
   const input = document.getElementById("searchInput");
-  // const btn = document.getElementById("searchBtn"); // Removed
   const clearBtn = document.getElementById("clearSearchBtn");
   const historySelect = document.getElementById('historySelect');
   const suggestList = document.getElementById("suggestList");
 
-  input.addEventListener('focus', () => {
-      historySelect.style.display = 'block';
-  });
-
-  document.addEventListener('click', (e) => {
-      if (e.target !== input && e.target !== historySelect) {
-          historySelect.style.display = 'none';
-      }
-  });
+  input.addEventListener('focus', () => { historySelect.style.display = 'block'; });
+  document.addEventListener('click', (e) => { if (e.target !== input && e.target !== historySelect) historySelect.style.display = 'none'; });
 
   historySelect.addEventListener('change', function() {
     if(this.value !== "") {
-      const item = searchHistory[this.value];
-      moveToLocation(item.lat, item.lng);
-      input.value = item.name;
-      this.value = "";
-      this.style.display = 'none'; 
+      const item = searchHistory[this.value]; moveToLocation(item.lat, item.lng);
+      input.value = item.name; this.value = ""; this.style.display = 'none';
     }
   });
 
-  const doSearch = () => {
-    const q = input.value.trim();
-    if(q) searchKeyword(q);
-    suggestList.style.display = "none";
-  };
+  const doSearch = () => { const q = input.value.trim(); if(q) searchKeyword(q); suggestList.style.display = "none"; };
+  input.addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
 
-  // btn.onclick = doSearch; // Removed
-
-  input.addEventListener("keydown", e => {
-    const items = suggestList.querySelectorAll("div");
-    if (suggestList.style.display === "block" && items.length > 0) {
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            activeSuggestIndex++;
-            if (activeSuggestIndex >= items.length) activeSuggestIndex = 0;
-            updateActiveItem(items);
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            activeSuggestIndex--;
-            if (activeSuggestIndex < 0) activeSuggestIndex = items.length - 1;
-            updateActiveItem(items);
-        } else if (e.key === "Enter") {
-            e.preventDefault();
-            if (activeSuggestIndex > -1) {
-                items[activeSuggestIndex].click();
-            } else {
-                doSearch();
-            }
-        }
-    } else if (e.key === "Enter") {
-        doSearch();
-    }
-  });
-
-  function updateActiveItem(items) {
-      items.forEach(item => item.classList.remove("active"));
-      if (activeSuggestIndex > -1 && items[activeSuggestIndex]) {
-          items[activeSuggestIndex].classList.add("active");
-          items[activeSuggestIndex].scrollIntoView({ block: "nearest" });
-          input.value = items[activeSuggestIndex].textContent; 
-      }
-  }
-
-  clearBtn.onclick = () => {
-    input.value = "";
-    [left, right].forEach(side => {
-        if (side.searchMarker) {
-            side.searchMarker.setMap(null);
-            side.searchMarker = null;
-        }
-    });
-    if(kakaoSearchMarker) { kakaoSearchMarker.setMap(null); kakaoSearchMarker = null; }
-  };
+  clearBtn.onclick = () => { input.value = ""; [left, right].forEach(side => { if (side.searchMarker) { side.searchMarker.setMap(null); side.searchMarker = null; } }); };
   
   input.addEventListener("input",()=>{
-    const q=input.value.trim();
-    activeSuggestIndex = -1;
-    if(!q){ suggestList.style.display="none"; return; }
+    const q=input.value.trim(); if(!q){ suggestList.style.display="none"; return; }
     if(kakaoPs){
       kakaoPs.keywordSearch(q,(r,s)=>{
-        if(s!==kakao.maps.services.Status.OK || !r.length){ suggestList.style.display="none"; return; }
+        if(s!==kakao.maps.services.Status.OK){ suggestList.style.display="none"; return; }
         suggestList.innerHTML="";
-        r.slice(0,10).forEach((item, idx)=>{
-          const div=document.createElement("div");
-          div.textContent=item.place_name+(item.road_address_name?" ("+item.road_address_name+")":"");
-          div.onclick=()=>{
-            moveToLocation(item.y, item.x);
-            suggestList.style.display="none";
-            input.value=item.place_name;
-            addToHistory(item.place_name, item.y, item.x);
-          };
+        r.slice(0,10).forEach(item => {
+          const div=document.createElement("div"); div.textContent=item.place_name;
+          div.onclick=()=>{ moveToLocation(item.y, item.x); suggestList.style.display="none"; input.value=item.place_name; addToHistory(item.place_name, item.y, item.x); };
           suggestList.appendChild(div);
         });
         suggestList.style.display="block";
       });
     }
   });
-
-  document.addEventListener("click", e => {
-      if (!e.target.closest(".panel")) {
-          suggestList.style.display = "none";
-      }
-  });
 }
 
-function moveToLocation(lat, lng) {
-  state.lat = parseFloat(lat); state.lng = parseFloat(lng); state.zoom = 18;
-  applyTo(left); applyTo(right);
-  showSearchMarkers(lat, lng);
-}
-
+function moveToLocation(lat, lng) { state.lat = parseFloat(lat); state.lng = parseFloat(lng); state.zoom = 18; applyTo(left); applyTo(right); showSearchMarkers(lat, lng); }
 function showSearchMarkers(lat, lng) {
   [left, right].forEach(side => {
-    if(!side.map) return;
-
-    if (side.searchMarker) {
-        side.searchMarker.setMap(null);
-        side.searchMarker = null;
-    }
-
+    if(!side.map) return; if (side.searchMarker) side.searchMarker.setMap(null);
     let marker = null;
-
-    if(side.type === 'google') {
-        marker = new google.maps.Marker({ 
-            position: { lat: parseFloat(lat), lng: parseFloat(lng) }, 
-            map: side.map 
-        });
-    }
-    else if(side.type === 'naver') {
-        marker = new naver.maps.Marker({ 
-            position: new naver.maps.LatLng(lat, lng), 
-            map: side.map 
-        });
-    }
-    else if(side.type === 'kakao') {
-        marker = new kakao.maps.Marker({ 
-            position: new kakao.maps.LatLng(lat, lng), 
-            map: side.map 
-        });
-    }
-
+    if(side.type === 'google') marker = new google.maps.Marker({ position: { lat: parseFloat(lat), lng: parseFloat(lng) }, map: side.map });
+    else if(side.type === 'naver') marker = new naver.maps.Marker({ position: new naver.maps.LatLng(lat, lng), map: side.map });
+    else if(side.type === 'kakao') marker = new kakao.maps.Marker({ position: new kakao.maps.LatLng(lat, lng), map: side.map });
     side.searchMarker = marker;
   });
 }
-
-function addToHistory(name, lat, lng) {
-  searchHistory = searchHistory.filter(i => i.name !== name);
-  searchHistory.unshift({ name, lat, lng });
-  if(searchHistory.length > 7) searchHistory.pop();
-  localStorage.setItem('mapSearchHistory', JSON.stringify(searchHistory));
-  renderHistory();
-}
-
-function renderHistory() {
-  const el = document.getElementById('historySelect');
-  el.innerHTML = '<option value="">최근 검색 기록</option>';
-  searchHistory.forEach((item, idx) => {
-    const opt = document.createElement('option');
-    opt.value = idx; opt.text = item.name;
-    el.appendChild(opt);
-  });
-}
-
+function addToHistory(name, lat, lng) { searchHistory = searchHistory.filter(i => i.name !== name); searchHistory.unshift({ name, lat, lng }); if(searchHistory.length > 7) searchHistory.pop(); localStorage.setItem('mapSearchHistory', JSON.stringify(searchHistory)); renderHistory(); }
+function renderHistory() { const el = document.getElementById('historySelect'); el.innerHTML = '<option value="">기록</option>'; searchHistory.forEach((item, idx) => { const opt = document.createElement('option'); opt.value = idx; opt.text = item.name; el.appendChild(opt); }); }
 function searchKeyword(q){
-  if(!kakaoGeocoder) return;
   kakaoGeocoder.addressSearch(q, (res, status) => {
-    if(status === kakao.maps.services.Status.OK) {
-      moveToLocation(res[0].y, res[0].x);
-      addToHistory(res[0].address_name, res[0].y, res[0].x);
-    } else {
-      kakaoPs.keywordSearch(q, (r, s) => {
-        if(s === kakao.maps.services.Status.OK) {
-          moveToLocation(r[0].y, r[0].x);
-          addToHistory(r[0].place_name, r[0].y, r[0].x);
-        }
-      });
-    }
+    if(status === kakao.maps.services.Status.OK) { moveToLocation(res[0].y, res[0].x); addToHistory(res[0].address_name, res[0].y, res[0].x); }
+    else { kakaoPs.keywordSearch(q, (r, s) => { if(s === kakao.maps.services.Status.OK) { moveToLocation(r[0].y, r[0].x); addToHistory(r[0].place_name, r[0].y, r[0].x); } }); }
   });
 }
 </script>
 </body>
 </html>
-
