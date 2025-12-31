@@ -2,57 +2,18 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Dual Map Viewer - Final (Optimized)</title>  
-  <link rel="icon" type="image/x-icon" href="https://parkstery.github.io/map/images/favicon.ico"> 
+  <title>Dual Map Viewer - Final (Optimized)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     html,body{margin:0;height:100%;font-family:Arial;}
-    #controls{display:flex;gap:20px;padding:8px;background:#222;color:#fff;flex-wrap:wrap;align-items:center;}
-    
-    .panel{display:flex;gap:6px;align-items:center;flex-wrap:wrap; position: relative;}
-    
-    /* [수정 2-1] 검색창 너비 200px로 변경 */
-    #searchInput{width:200px;padding:4px 6px;font-size: 16px; font-family: Arial, sans-serif;}
-    
-    /* [수정 2-2] 히스토리 팝업 위치 300px로 변경 */
-    #historySelect { 
-        display: none; /* 기본 숨김 */
-        position: absolute;
-        top: 38px; /* 인풋창 바로 아래 */
-        left: 300px; /* 검색창 위치 쯤에 맞춤 */
-        width: 160px; 
-        height: auto;
-        max-height: 200px;
-        padding: 4px; 
-        font-size: 14px; 
-        z-index: 2001;
-        border: 1px solid #888;
-        background: #fff;
-        color: #333;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-    }
-
+    #controls{display:flex;gap:20px;padding:8px;background:#222;color:#fff;flex-wrap:wrap;}
+    .panel{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+    #searchInput{width:260px;padding:4px 6px;font-size: 16px; font-family: Arial, sans-serif;}
+    #historySelect { width: 140px; height: 28px; padding: 4px 6px; font-size: 15px; margin-left: 5px; }
     #container{display:flex;height:calc(100% - 48px);}
     .map{flex:1;position:relative; border-right: 1px solid #444;}
     .map:last-child{border-right:none;}
-
-    /* Padlet 링크 스타일 (우측 정렬) */
-    .padlet-link {
-        margin-left: auto; 
-        color: #4DC4FF;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: bold;
-        padding: 3px 5px;
-        border: 1px solid #4DC4FF;
-        border-radius: 4px;
-        transition: all 0.3s;
-    }
-    .padlet-link:hover {
-        background: #4DC4FF;
-        color: #fff;
-    }
 
     /* 자동완성 */
     #suggestList{
@@ -64,64 +25,29 @@
     #suggestList div:hover, #suggestList div.active{background:#cce5ff;}
 
     /* 컨트롤 스타일 */
-    #leftType, #rightType { 
-      padding: 4px; /* 버튼 패딩 원복/조정 */
-      font-size: 16px;
-      height: 32px; /* 높이 맞춤 */
-      cursor: pointer;
-      text-align: center;
-      width: 36px; /* 크기 조정 */
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-     }
-
-    /* 버튼 내부 이미지 스타일 */
-    #leftType img, #rightType img {
-        width: 24px; height: 24px; object-fit: contain;
-    }
-
-    select#leftSelect, select#rightSelect { width: 70px; height: 32px; padding: 1px 1px; font-size: 15px; }
-    
+    #leftType, #rightType { padding: 0 12px; font-size: 16px; }
+    select#leftSelect, select#rightSelect { width: 86px; height: 26px; padding: 4px 6px; font-size: 15px; }
     #searchBtn, #clearSearchBtn { 
         padding: 1px 12px; 
-        height: 32px; /* 높이 맞춤 */
-        width: 32px;
+        height: 28px; 
         line-height: 20px;
         font-size: 13px; 
-        text-align: center; 
-        min-width: 1px;
-        cursor: pointer;
-        background: #fff;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        margin-left: 2px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    #clearSearchBtn img { width: 20px; height: 20px; object-fit: contain; }
+        min-width: 50px; }
 
-    /* 미니맵 스타일 */
+    /* 공통 미니맵 스타일 */
     .minimap-style {
       position: absolute !important;
-      width: 25% !important; 
-      height: 25% !important;
-      min-width: 250px;
-      min-height: 200px;
+      width: 350px !important; height: 250px !important;
       top: auto !important; bottom: 0; left: 0;
       z-index: 20; border-top: 1px solid #888; border-right: 1px solid #888;
       box-shadow: 2px -2px 5px rgba(0,0,0,0.3);
     }
 
-    /* 닫기 버튼 공통 스타일 */
+    /* 닫기 버튼 공통 스타일 (네이버 깜빡임 해결 적용) */
     .close-btn-style {
       position:absolute; top:10px; right:10px; 
-      z-index: 10001; 
-      transform: translateZ(0); 
+      z-index: 10001; /* [수정] Z-index 상향 */
+      transform: translateZ(0); /* [수정] GPU 레이어 강제 생성 */
       padding:5px 10px; background:#fff; color:#333;
       border:1px solid #ccc; cursor:pointer; border-radius:3px;
       font-weight:bold; font-size: 12px; display:none; 
@@ -137,7 +63,7 @@
       box-shadow:0 2px 4px rgba(0,0,0,0.2); color:#333;
     }
 
-    /* 카카오 GIS 툴바 스타일 개선 */
+    /* 카카오 GIS 툴바 */
     .kakao-toolbar{
       position:absolute;top:5px;right:40px;z-index:30;
       background:white;border-radius:5px;
@@ -145,31 +71,13 @@
       display:flex;overflow:hidden;
     }
     .kakao-toolbar button{
-      background:#fff; border:0; border-right:1px solid #ddd;
-      padding:6px 10px; /* 패딩 조정 */
-      cursor:pointer;
-      display: flex; /* 이미지 수직 중앙 정렬 */
-      align-items: center;
-      justify-content: center;
-      width: 40px; /* 버튼 크기 통일 */
-      height: 34px;
+      background:#fff;border:0;border-right:1px solid #ddd;
+      padding:8px 12px;cursor:pointer;font-weight:bold;font-size:12px;
     }
     .kakao-toolbar button:last-child{border-right:none;}
     .kakao-toolbar button:hover{background:#f5f5f5;}
-    
-    /* 활성화 상태 (배경 파란색) */
-    .kakao-toolbar button.active{background:#3396ff;}
-    
-    /* 활성화 시 이미지 색상 반전 (흰색 효과) */
-    .kakao-toolbar button.active img {
-        filter: invert(100%);
-    }
-    .kakao-toolbar button img {
-        display: block;
-        width: 20px; 
-        height: 20px;
-        pointer-events: none; /* 이미지가 클릭 이벤트 방해하지 않도록 설정 */
-    }
+    .kakao-toolbar button.active{background:#3396ff;color:white;}
+    .kakao-toolbar button.delete-btn{color:#e14f4f;}
 
     /* 로드뷰 상태 표시 */
     .roadview-status {
@@ -220,35 +128,29 @@
 
   <!-- SDKs -->
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8d2d116d6a534a98e73133808f5843a6&libraries=services,drawing,clusterer"></script>
-  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du&submodules=panorama"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYXu5yKdW71VuKmI-N2M2xbvMaYTK2HCg&callback=init"></script>
 </head>
 
 <body>
 <div id="controls">
   <div class="panel">
+    LEFT:
     <select id="leftSelect"><option value="google">Google</option><option value="kakao">Kakao</option><option value="naver">Naver</option></select>
-    <!-- [수정 1] 초기 상태에 맞춰 이미지 설정 (Left는 Satellite=True 이므로 satellite_img) -->
-    <button id="leftType" title="지도/위성"><img src="images/satellite_img.png" alt="MapType"></button>
+    <button id="leftType">지도/위성</button>
   </div>
   <div class="panel">
+    RIGHT:
     <select id="rightSelect"><option value="google">Google</option><option value="kakao" selected>Kakao</option><option value="naver">Naver</option></select>
-    <!-- [수정 1] 초기 상태에 맞춰 이미지 설정 (Right는 Satellite=False 이므로 map_img) -->
-    <button id="rightType" title="지도/위성"><img src="images/map_img.png" alt="MapType"></button>
+    <button id="rightType">지도/위성</button>
   </div>
   <div class="panel" style="position:relative;">
-    <input id="searchInput" placeholder="주소 또는 지명 입력" autocomplete="off"/>
-    <button id="searchBtn" title="검색">Go</button>
-    <button id="clearSearchBtn" title="지우기"><img src="images/map_trash20.jpg" alt="Clear"></button>
-    
-    <select id="historySelect" size="5"><option value="">최근 검색 기록</option></select>
-    
+    검색: <input id="searchInput" placeholder="주소 또는 지명 입력" autocomplete="off"/>
+    <button id="searchBtn">Go</button>
+    <button id="clearSearchBtn">지 움</button>
+    <select id="historySelect"><option value="">최근 검색 기록</option></select>
     <div id="suggestList"></div>
   </div>
-
-  <!-- [수정 2-3] Padlet 링크 변경 -->
-  <a href="https://padlet.com/googiden/padlet-qr93paqb7efcunwe" target="_blank" class="padlet-link">담벼락 &gt;</a>
-  
 </div>
 
 <div id="container">
@@ -426,27 +328,17 @@ function createMap(side, containerId) {
     const toolbar = document.createElement("div");
     toolbar.className = "kakao-toolbar";
     
-    // [수정] 툴바 버튼 데이터 (이미지 경로 적용)
     const btnData = [
-      { id: 'roadview', text: '로드뷰', img: './images/map_roadview20.jpg', action: () => toggleKakaoMode(side, 'roadview', wrapper) },
-      { id: 'district', text: '지적도', img: './images/map_cada20.jpg', action: () => toggleKakaoOverlay(side, 'district') },
-      { id: 'distance', text: '거리', img: './images/map_scale20.jpg', action: () => toggleKakaoMode(side, 'distance', wrapper) },
-      { id: 'area', text: '면적', img: './images/map_area20.jpg', action: () => toggleKakaoMode(side, 'area', wrapper) },
-      { id: 'clear', text: '초기화', img: './images/map_trash20.jpg', class: 'delete-btn', action: () => clearKakaoMeasurements(side) }
+      { id: 'roadview', text: '로드뷰', action: () => toggleKakaoMode(side, 'roadview', wrapper) },
+      { id: 'district', text: '지적도', action: () => toggleKakaoOverlay(side, 'district') },
+      { id: 'distance', text: '거리', action: () => toggleKakaoMode(side, 'distance', wrapper) },
+      { id: 'area', text: '면적', action: () => toggleKakaoMode(side, 'area', wrapper) },
+      { id: 'clear', text: '초기화', class: 'delete-btn', action: () => clearKakaoMeasurements(side) }
     ];
 
     btnData.forEach(bd => {
       const btn = document.createElement("button");
-      
-      // 이미지 생성 및 추가
-      const img = document.createElement("img");
-      img.src = bd.img;
-      img.alt = bd.text;
-      btn.appendChild(img);
-      
-      // 툴팁 설정 (마우스 호버 시 텍스트 표시)
-      btn.title = bd.text; 
-
+      btn.innerHTML = bd.text;
       if(bd.class) btn.className = bd.class;
       btn.setAttribute('data-mode', bd.id); 
       btn.onclick = bd.action;
@@ -475,6 +367,19 @@ function createMap(side, containerId) {
     kakao.maps.event.addListener(map, 'mousemove', (e) => onKakaoMapMouseMove(side, e));
     kakao.maps.event.addListener(map, 'rightclick', (e) => onKakaoMapRightClick(side, e));
 
+    // kakao.maps.event.addListener(rv, 'position_changed', () => {
+    //   const pos = rv.getPosition();
+    //   if(side.gis.walker) {
+    //     side.gis.walker.setPosition(pos);
+    //   } else {
+    //     side.gis.walker = new kakao.maps.CustomOverlay({
+    //         position: pos,
+    //         content: createWalkerContent(0),
+    //         map: side.map
+    //     });
+    //   }
+    //   map.setCenter(pos);
+    // });
     kakao.maps.event.addListener(rv, 'position_changed', () => {
       // 로드뷰가 활성화된 상태가 아니라면 아무것도 하지 않음
       if (!side.roadviewActive) return; 
@@ -494,6 +399,12 @@ function createMap(side, containerId) {
 
     
     kakao.maps.event.addListener(rv, 'viewpoint_changed', () => {
+    //   const vp = rv.getViewpoint();
+    //   if(side.gis.walker) {
+    //     side.gis.walker.setContent(createWalkerContent(vp.pan));
+    //   }
+    // });
+
       if (!side.roadviewActive) return; // 활성화 상태 체크
 
       const vp = rv.getViewpoint();
@@ -655,13 +566,8 @@ function toggleKakaoMode(side, mode, wrapper){
     return;
   }
 
-  // [수정] 모드 변경 시 버튼 상태 초기화 (단, 'district'(지적도) 버튼은 제외)
   const buttons = side.dom.toolbar.querySelectorAll('button');
-  buttons.forEach(b => {
-      if(b.getAttribute('data-mode') !== 'district') {
-          b.classList.remove('active');
-      }
-  });
+  buttons.forEach(b => b.classList.remove('active'));
   
   const targetBtn = side.dom.toolbar.querySelector(`button[data-mode="${mode}"]`);
   if(targetBtn) targetBtn.classList.add('active');
@@ -683,7 +589,7 @@ function toggleKakaoMode(side, mode, wrapper){
     side.map.setCursor('crosshair');
     side.gis.waiting = true; 
     side.roadviewActive = true; 
-    // 이미지 버튼이므로 텍스트 변경 로직 생략
+    if(targetBtn) targetBtn.innerHTML = "로드뷰 취소";
   } 
   else if (mode === 'distance' || mode === 'area') {
     side.map.setCursor('crosshair');
@@ -706,6 +612,9 @@ function onKakaoMapClick(side, mouseEvent, rvDiv, mapDiv, closeBtn){
       closeBtn.style.display = 'block';
       mapDiv.classList.add('minimap-style');
       
+      const btn = side.dom.toolbar.querySelector('button[data-mode="roadview"]');
+      if(btn) btn.innerHTML = "로드뷰";
+
       setTimeout(() => {
         side.map.relayout();
         side.panorama.relayout();
@@ -755,16 +664,13 @@ function moveKakaoRoadview(side, pos) {
   kakaoRvClient.getNearestPanoId(pos, 50, (panoId) => {
     if(panoId) {
       side.panorama.setPanoId(panoId, pos);
-      if(side.gis.walker) {
-        side.gis.walker.setPosition(pos);
-      } else if (side.roadviewActive) { 
-        side.gis.walker = new kakao.maps.CustomOverlay({
-            position: pos,
-            content: createWalkerContent(0),
-            map: side.map
-        });
-      }
-      map.setCenter(pos);
+      if(side.gis.walker) side.gis.walker.setMap(null);
+      side.gis.walker = new kakao.maps.CustomOverlay({
+        position: pos,
+        content: createWalkerContent(0),
+        map: side.map
+      });
+      side.map.setCenter(pos);
     }
   });
 }
@@ -818,11 +724,9 @@ function closeKakaoRoadview(side, rvDiv, mapDiv, closeBtn){
   side.map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
 
   const buttons = side.dom.toolbar.querySelectorAll('button');
-  buttons.forEach(b => {
-      if(b.getAttribute('data-mode') !== 'district') {
-          b.classList.remove('active');
-      }
-  });
+  buttons.forEach(b => b.classList.remove('active'));
+  const btn = side.dom.toolbar.querySelector('button[data-mode="roadview"]');
+  if(btn) btn.innerHTML = "로드뷰";
 
   if(side.gis.walker) { side.gis.walker.setMap(null); side.gis.walker = null; }
   if(side.gis.statusEl) { side.gis.statusEl.remove(); side.gis.statusEl = null; }
@@ -835,7 +739,7 @@ function clearKakaoMeasurements(side){
   side.gis.overlays.forEach(o => o.setMap(null));
   side.gis.shapes.forEach(s => s.setMap(null));
   side.gis.markers.forEach(m => m.setMap(null));
-  
+  // [수정] side 객체의 검색 마커 제거
   if(side.searchMarker) { side.searchMarker.setMap(null); side.searchMarker = null; }
   if(kakaoSearchMarker) { kakaoSearchMarker.setMap(null); kakaoSearchMarker = null; }
   
@@ -905,6 +809,7 @@ function bindRoadviewSync() {
       else if (toType === 'naver') {
         const nPos = new naver.maps.LatLng(lat, lng);
         toPano.setPosition(nPos);
+        // [중요] 타겟 네이버 미니맵 & 마커 강제 동기화
         if(toSide.map) toSide.map.setCenter(nPos);
         if(toSide.naverState.marker) toSide.naverState.marker.setPosition(nPos);
         releaseSync(300);
@@ -914,8 +819,10 @@ function bindRoadviewSync() {
           if (panoId) {
             const newPos = new kakao.maps.LatLng(lat, lng);
             toPano.setPanoId(panoId, newPos);
+            // [중요] 타겟 카카오 미니맵 강제 동기화
             if(toSide.map) toSide.map.setCenter(newPos);
             
+            // [수정] 타겟 카카오맵이 로드뷰 모드일 때만 Walker 표시
             if (toSide.roadviewActive) {
                 if(toSide.gis.walker) {
                   toSide.gis.walker.setPosition(newPos);
@@ -931,6 +838,7 @@ function bindRoadviewSync() {
       }
     };
 
+    // [중요] Angle Sync Logic 제거됨
     if(fromType === 'kakao') {
       kakao.maps.event.addListener(fromPano, posEvent, onPosChange);
     } else if(fromType === 'naver') {
@@ -984,6 +892,9 @@ function syncFromNaver(side) { /* bindEvents로 대체 */ }
 function applyTo(target){
   if(!target.map) return;
   
+  // [수정] 거리뷰 실행 중에도 맵 연동이 되도록 차단 코드 주석 처리
+  // if(target.roadviewActive) return;
+
   if(target.type === "google"){
     target.map.setCenter(state); target.map.setZoom(state.zoom);
   } else if(target.type === "kakao"){
@@ -996,34 +907,11 @@ function applyTo(target){
 }
 
 function toggleType(side, btn){
-  // 1. 상태 토글 (지도 <-> 위성)
   side.satellite = !side.satellite;
-
-  // 2. 실제 지도 API에 반영 (구글/카카오/네이버)
-  if(side.map) {
-    if(side.type === "google") {
-        side.map.setMapTypeId(side.satellite ? "satellite" : "roadmap");
-    }
-    else if(side.type === "kakao") {
-        side.map.setMapTypeId(side.satellite ? kakao.maps.MapTypeId.HYBRID : kakao.maps.MapTypeId.ROADMAP);
-    }
-    else if(side.type === "naver") {
-        side.map.setMapTypeId(side.satellite ? naver.maps.MapTypeId.SATELLITE : naver.maps.MapTypeId.NORMAL);
-    }
-  }
-
-  // 3. [핵심] 버튼 이미지 변경 로직
-  // 버튼(btn) 하위에 있는 img 태그를 찾아서 src를 변경합니다.
-  const img = btn.querySelector('img');
-  if(img) {
-    if (side.satellite) {
-        // 위성 모드일 때 보여줄 이미지
-        img.src = "images/satellite_img.png";
-    } else {
-        // 일반 지도 모드일 때 보여줄 이미지
-        img.src = "images/map_img.png";
-    }
-  }
+  if(!side.map) return;
+  if(side.type === "google") side.map.setMapTypeId(side.satellite ? "satellite" : "roadmap");
+  if(side.type === "kakao") side.map.setMapTypeId(side.satellite ? kakao.maps.MapTypeId.HYBRID : kakao.maps.MapTypeId.ROADMAP);
+  if(side.type === "naver") side.map.setMapTypeId(side.satellite ? naver.maps.MapTypeId.SATELLITE : naver.maps.MapTypeId.NORMAL);
 }
 
 function zoomToKakao(z){ return Math.max(1, Math.min(14, 20-z)); }
@@ -1042,29 +930,6 @@ function bindUI(){
   const clearBtn = document.getElementById("clearSearchBtn");
   const historySelect = document.getElementById('historySelect');
   const suggestList = document.getElementById("suggestList");
-
-  // [수정 3] 검색창 포커스 시 히스토리 팝업 표시
-  input.addEventListener('focus', () => {
-      historySelect.style.display = 'block';
-  });
-
-  // [수정 3] 외부 클릭 시 히스토리 팝업 숨김 (단, 팝업이나 인풋 클릭은 제외)
-  document.addEventListener('click', (e) => {
-      if (e.target !== input && e.target !== historySelect) {
-          historySelect.style.display = 'none';
-      }
-  });
-
-  // 히스토리 선택 시 팝업 닫기 로직은 change 이벤트에 포함
-  historySelect.addEventListener('change', function() {
-    if(this.value !== "") {
-      const item = searchHistory[this.value];
-      moveToLocation(item.lat, item.lng);
-      input.value = item.name;
-      this.value = "";
-      this.style.display = 'none'; // 선택 후 숨김
-    }
-  });
 
   const doSearch = () => {
     const q = input.value.trim();
@@ -1109,16 +974,28 @@ function bindUI(){
       }
   }
 
+  // [수정] 검색창 지움 버튼 로직 변경
   clearBtn.onclick = () => {
     input.value = "";
+    // 전역 변수 대신 각 side 객체의 마커를 확인하여 제거
     [left, right].forEach(side => {
         if (side.searchMarker) {
             side.searchMarker.setMap(null);
             side.searchMarker = null;
         }
     });
+    // 레거시 전역 변수 초기화
     if(kakaoSearchMarker) { kakaoSearchMarker.setMap(null); kakaoSearchMarker = null; }
   };
+
+  historySelect.addEventListener('change', function() {
+    if(this.value !== "") {
+      const item = searchHistory[this.value];
+      moveToLocation(item.lat, item.lng);
+      input.value = item.name;
+      this.value = "";
+    }
+  });
   
   // 자동완성
   input.addEventListener("input",()=>{
@@ -1158,10 +1035,12 @@ function moveToLocation(lat, lng) {
   showSearchMarkers(lat, lng);
 }
 
+// [수정] 마커 표시 함수: 전역 변수 의존성을 제거하고 자료형 문제 해결
 function showSearchMarkers(lat, lng) {
   [left, right].forEach(side => {
     if(!side.map) return;
 
+    // 1. 기존 마커 제거
     if (side.searchMarker) {
         side.searchMarker.setMap(null);
         side.searchMarker = null;
@@ -1169,18 +1048,21 @@ function showSearchMarkers(lat, lng) {
 
     let marker = null;
 
+    // 2. 구글맵: lat, lng를 Number로 변환
     if(side.type === 'google') {
         marker = new google.maps.Marker({ 
             position: { lat: parseFloat(lat), lng: parseFloat(lng) }, 
             map: side.map 
         });
     }
+    // 3. 네이버맵
     else if(side.type === 'naver') {
         marker = new naver.maps.Marker({ 
             position: new naver.maps.LatLng(lat, lng), 
             map: side.map 
         });
     }
+    // 4. 카카오맵
     else if(side.type === 'kakao') {
         marker = new kakao.maps.Marker({ 
             position: new kakao.maps.LatLng(lat, lng), 
@@ -1188,6 +1070,7 @@ function showSearchMarkers(lat, lng) {
         });
     }
 
+    // 5. 생성된 마커 저장
     side.searchMarker = marker;
   });
 }
