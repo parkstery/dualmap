@@ -28,17 +28,20 @@
     }
     
     /* [요구사항] 히스토리 팝업 위치 조정 */
-    #historySelect { 
-        display: none; 
-        position: absolute;
-        top: 34px; left: 0;
-        width: 180px; height: auto;
-        max-height: 200px; padding: 4px; 
-        font-size: 14px; z-index: 2001;
-        border: 1px solid #888; background: #fff; color: #333;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-    }
 
+    #suggestList {
+      position: absolute; top: 38px; 
+      left: 6px; /* 패널 좌측(padding 고려)에 맞춤 */
+      width: 180px; max-height: 400px; 
+      overflow-y: auto; background: #fff; border: 1px solid #888; z-index: 2000; display: none;
+    }
+    #historySelect { 
+        display: none; position: absolute; top: 38px; 
+        left: 186px; /* suggestList 좌측(6) + 너비(180)에 맞춤 */
+        width: 150px; max-height: 200px; padding: 4px; 
+        font-size: 14px; z-index: 2001; border: 1px solid #888; 
+        background: #fff; color: #333; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
     #container{
         display:flex; 
         /* 기본: 가로 배치 */
@@ -65,11 +68,7 @@
     .padlet-link:hover { background: #4DC4FF; color: #fff; }
 
     /* 자동완성 */
-    #suggestList{
-      position:absolute; top:34px; left:0;
-      width:250px; max-height:500px; overflow-y:auto; background:#fff;
-      border:1px solid #888; z-index:2000; display:none;
-    }
+
     #suggestList div{padding:8px 10px; border-bottom:1px solid #eee; cursor:pointer; color:black; font-size: 14px;}
     #suggestList div:hover, #suggestList div.active{background:#cce5ff;}
 
@@ -86,7 +85,7 @@
     select#leftSelect, select#rightSelect { width: 60px; height: 28px; font-size: 13px; border-radius: 3px; }
     
     #clearSearchBtn { 
-        padding: 0; height: 29px; width: 28px;
+        padding: 0; height: 29px; width: 24px;
         cursor: pointer; background: #fff;
         border: 1px solid #ccc; border-radius: 3px;
         display: flex; align-items: center; justify-content: center;
@@ -174,53 +173,91 @@
        - 맵 배치 상하(Column)로 변경
        - UI 요소 크기 및 배치 최적화 
        ========================================================================== */
+ 
+/* === [모바일 최적화 (Mobile Responsive)] === */
     @media (max-width: 768px) {
-        /* 1. 컨테이너를 세로 배치로 변경 */
-        #container {
-            flex-direction: column;
+        #container { 
+            flex-direction: column; 
+            /* height auto 대신 명확한 값 부여 */
+            height: calc(100dvh - 100px); /* 100dvh 사용 */
+            min-height: 0;
         }
         
-        /* 2. 각 맵의 높이를 50%로 설정하고 너비를 100%로 설정 */
-        .map {
+        .map { 
+            border-right: none; 
+            border-bottom: 1px solid #444; 
             width: 100%;
-            height: 50%;
-            border-right: none;
-            border-bottom: 1px solid #444; /* 세로 배치 시 구분선은 아래쪽에 */
+            height: 50%; 
+            flex: 1 1 auto;
         }
         
-        /* 3. 컨트롤 패널 최적화 */
-        #controls {
-            flex-wrap: nowrap; /* 한 줄 유지 시도 */
-            overflow-x: auto; /* 내용이 넘치면 가로 스크롤 허용 */
-            padding: 4px;
-            gap: 6px;
+        /* [수정] z-index 명시 */
+        #controls { 
+            padding: 5px; gap: 10px; justify-content: space-between; 
+            z-index: 2000; /* 맵보다 위에 위치 */
+            position: relative;
         }
         
         /* 검색창 너비 축소 */
-        #searchInput { width: 110px; font-size: 13px; }
-        
+        /* #searchInput { width: 110px; font-size: 13px; } */
+        #searchInput { width: 100px; height: 16px; font-size: 13px; padding: 5px; }
         /* 선택박스 글자 크기 조정 */
         select#leftSelect, select#rightSelect { width: 60px; font-size: 12px; }
-        
+                
         /* 링크 버튼 글자 크기 조정 */
         .padlet-link { font-size: 12px; }
 
         /* 모바일에서 미니맵 크기 조정 (화면을 너무 가리지 않게) */
-        .minimap-style {
+        /* .minimap-style {
             width: 35% !important;
             height: 35% !important;
             min-width: 150px;
             min-height: 120px;
             bottom: 10px; left: 10px;
+        } */
+        .minimap-style {
+            width: 40% !important; height: 35% !important;
+            min-width: 140px; min-height: 110px;
+            bottom: 5px; left: 5px;
+        }        
+    
+
+
+        /* [핵심 수정] 히스토리 팝업: fixed로 변경하여 맵 위로 강제 부양 */
+        #historySelect { 
+            display: none;
+            position: fixed; /* absolute -> fixed */
+            left: 185px; 
+            top: 50px;       /* 컨트롤 패널 높이(약 46px) + 여백 */
+            
+            width: 150px; 
+            height: auto; max-height: 200px;
+            padding: 4px; font-size: 14px; 
+            z-index: 10001; /* 맵 레이어보다 확실히 높게 설정 */
+            border: 1px solid #888;
+            background: #fff; color: #333;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5); /* 그림자 진하게 */
         }
-    }
+
+        /* [핵심 수정] 추천 리스트: fixed로 변경 */
+        #suggestList {
+            position: fixed; /* absolute -> fixed */
+            top: 50px;       /* 컨트롤 패널 높이 + 여백 */
+            left: 10px;      /* 화면 왼쪽에서 약간 띄움 */
+            width: 170px;    /* 모바일 화면 고려하여 너비 조정 */
+            
+            max-height: 500px; overflow-y: auto; background: #fff;
+            border: 1px solid #888; 
+            z-index: 10001; /* 맵 위로 강제 부양 */
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+    }    
   </style>
 
   <!-- SDKs -->
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=KAKAO_KEY_PLACEHOLDER&libraries=services,drawing,clusterer"></script>  
-  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=NAVER_KEY_PLACEHOLDER&submodules=panorama"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_KEY_PLACEHOLDER&callback=init"></script>
-
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8d2d116d6a534a98e73133808f5843a6&libraries=services,drawing,clusterer"></script>
+  <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du&submodules=panorama"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYXu5yKdW71VuKmI-N2M2xbvMaYTK2HCg&callback=init"></script>
 </head>
 
 <body>
@@ -748,5 +785,3 @@ function searchKeyword(q){
 </script>
 </body>
 </html>
-
-
