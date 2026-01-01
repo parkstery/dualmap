@@ -193,7 +193,7 @@
         
         /* [수정] z-index 명시 */
         #controls { 
-            padding: 5px; gap: 10px; justify-content: space-between; 
+            padding: 1px; gap: 4px; justify-content: space-between; 
             z-index: 2000; /* 맵보다 위에 위치 */
             position: relative;
         }
@@ -208,13 +208,7 @@
         .padlet-link { font-size: 12px; }
 
         /* 모바일에서 미니맵 크기 조정 (화면을 너무 가리지 않게) */
-        /* .minimap-style {
-            width: 35% !important;
-            height: 35% !important;
-            min-width: 150px;
-            min-height: 120px;
-            bottom: 10px; left: 10px;
-        } */
+
         .minimap-style {
             width: 40% !important; height: 35% !important;
             min-width: 140px; min-height: 110px;
@@ -259,7 +253,6 @@
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du&submodules=panorama"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYXu5yKdW71VuKmI-N2M2xbvMaYTK2HCg&callback=init"></script>
 </head>
-
 <body>
 <div id="controls">
   <!-- [요구사항] 상단 패널 컨트롤 위치 변경 -->
