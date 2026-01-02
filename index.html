@@ -181,16 +181,19 @@
             /* height auto 대신 명확한 값 부여 */
             height: calc(100dvh - 100px); /* 100dvh 사용 */
             min-height: 0;
-        }
-        
+        }      
+     
+/* [수정] 모바일 맵 스타일 */
         .map { 
             border-right: none; 
             border-bottom: 1px solid #444; 
             width: 100%;
             height: 50%; 
             flex: 1 1 auto;
-        }
-        
+            
+            /* [핵심] 로딩 타이밍 문제로 높이가 0이 되는 것을 방지하기 위해 최소 높이 강제 설정 */
+            min-height: 300px; 
+        }        
         /* [수정] z-index 명시 */
         #controls { 
             padding: 1px; gap: 4px; justify-content: space-between; 
@@ -253,6 +256,7 @@
   <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=a4kf3r53du&submodules=panorama"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYXu5yKdW71VuKmI-N2M2xbvMaYTK2HCg&callback=init"></script>
 </head>
+
 <body>
 <div id="controls">
   <!-- [요구사항] 상단 패널 컨트롤 위치 변경 -->
@@ -329,6 +333,19 @@ function init(){
   // [중요] 모바일 초기 로딩 시 레이아웃 깨짐 방지용 강제 리레이아웃 실행
   setTimeout(forceMapRelayout, 500); 
 }
+
+/* [추가] 모바일 새로고침 시 빈 화면 방지를 위한 안전장치 */
+window.addEventListener('load', () => {
+    // 페이지의 모든 리소스(CSS, 이미지 등)가 로드된 후 실행
+    setTimeout(() => {
+        forceMapRelayout(); // 1차 강제 리레이아웃
+    }, 100);
+
+    setTimeout(() => {
+        forceMapRelayout(); // 2차 강제 리레이아웃 (느린 네트워크 대비)
+    }, 1000);
+});
+  
 
 // [추가] 모바일 회전/리사이즈 대응 함수
 window.addEventListener('resize', () => {
