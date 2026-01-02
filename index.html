@@ -589,14 +589,47 @@ function moveKakaoRoadview(side, pos) {
   });
 }
 function onKakaoMapMouseMove(side, mouseEvent) { if(!side.gis.drawing) return; const path = side.gis.path.slice(); path.push(mouseEvent.latLng); side.gis.drawing.setPath(path); }
+
 function onKakaoMapRightClick(side, mouseEvent) {
+  // 1. 거리/면적 재기 모드일 때의 로직 (기존 유지)
   if(side.gis.mode === 'distance' || side.gis.mode === 'area') {
     if(side.gis.drawing && side.gis.path.length > 0) {
       const pos = mouseEvent.latLng;
-      let content = side.gis.mode === 'distance' ? `<div class="info-overlay">총 거리 <span style="font-weight:bold;color:#ee5555">${Math.round(side.gis.drawing.getLength()).toLocaleString()}m</span></div>` : `<div class="info-overlay">총 면적 <span style="font-weight:bold;color:#39f">${Math.round(side.gis.drawing.getArea()).toLocaleString()}m²</span></div>`;
+      let content = '';
+      
+      if(side.gis.mode === 'distance') {
+        content = `<div class="info-overlay">총 거리 <span style="font-weight:bold;color:#ee5555">${Math.round(side.gis.drawing.getLength()).toLocaleString()}m</span></div>`;
+      } else {
+        const area = Math.round(side.gis.drawing.getArea());
+        content = `<div class="info-overlay">총 면적 <span style="font-weight:bold;color:#39f">${area.toLocaleString()}m²</span><br>(${Number((area*0.3025).toFixed(1)).toLocaleString()}평)</div>`;
+      }
+      
       const overlay = new kakao.maps.CustomOverlay({ map: side.map, position: pos, content: content, yAnchor: 1 });
-      side.gis.overlays.push(overlay); side.gis.shapes.push(side.gis.drawing); side.gis.drawing = null; side.gis.path = [];
+      side.gis.overlays.push(overlay);
+      side.gis.shapes.push(side.gis.drawing);
+      side.gis.drawing = null;
+      side.gis.path = [];
     }
+  } 
+  // 2. [복구됨] 일반 모드일 때: 클릭 지점 주소 표시
+  else {
+    const pos = mouseEvent.latLng;
+    kakaoGeocoder.coord2Address(pos.getLng(), pos.getLat(), (result, status) => {
+      if(status === kakao.maps.services.Status.OK && result[0]) {
+        const addr = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
+        const contentHTML = `<div style="background:white; border:1px solid #333; padding:5px 8px; border-radius:4px; font-size:12px; box-shadow:2px 2px 5px rgba(0,0,0,0.3);">📍 ${addr}</div>`;
+        
+        // 오버레이 및 마커 생성
+        const overlay = new kakao.maps.CustomOverlay({ map: side.map, position: pos, content: contentHTML, yAnchor: 2.2 });
+        const marker = new kakao.maps.Marker({ position: pos, map: side.map });
+        
+        // 3초 후 자동 제거
+        setTimeout(() => { 
+            overlay.setMap(null); 
+            marker.setMap(null); 
+        }, 3000);
+      }
+    });
   }
 }
 function closeKakaoRoadview(side, rvDiv, mapDiv, closeBtn){
